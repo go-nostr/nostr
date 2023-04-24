@@ -13,16 +13,16 @@ func main() {
 
 	// NOTE: Initialize a struct containing all the service servers
 	sc := struct {
-		cl *http.Server
+		httpServer *http.Server
 	}{
-		cl: buildClientServer(),
+		httpServer: buildHTTPServer(),
 	}
 
 	// NOTE: Create an error group to manage the concurrent execution of service servers
 	g, _ := errgroup.WithContext(ctx)
 
 	// NOTE: Add service server Serve functions to the error group
-	g.Go(sc.cl.ListenAndServe)
+	g.Go(sc.httpServer.ListenAndServe)
 
 	// NOTE: Wait for all service servers to complete or return an error
 	if err := g.Wait(); err != nil {

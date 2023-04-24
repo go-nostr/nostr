@@ -4,23 +4,25 @@ import (
 	"encoding/json"
 )
 
+type MessageType string
+
 const (
 	// MessageTypeAuth represents an authentication message type.
-	MessageTypeAuth = "AUTH"
+	MessageTypeAuth MessageType = "AUTH"
 	// MessageTypeClose represents a Close message type.
-	MessageTypeClose = "CLOSE"
+	MessageTypeClose MessageType = "CLOSE"
 	// MessageTypeCount represents a count message type, usually for counting events.
-	MessageTypeCount = "COUNT"
+	MessageTypeCount MessageType = "COUNT"
 	// MessageTypeEndOfStoredEvents represents an End of Stored Events message type.
-	MessageTypeEOSE = "EOSE"
+	MessageTypeEOSE MessageType = "EOSE"
 	// MessageTypeEvent represents an Event message type.
-	MessageTypeEvent = "EVENT"
+	MessageTypeEvent MessageType = "EVENT"
 	// MessageTypeNotice represents a Notice message type, usually for notifications.
-	MessageTypeNotice = "NOTICE"
+	MessageTypeNotice MessageType = "NOTICE"
 	// MessageTypeOk represents a success confirmation message type.
-	MessageTypeOk = "OK"
+	MessageTypeOk MessageType = "OK"
 	// MessageTypeRequest represents a Request message type.
-	MessageTypeRequest = "REQ"
+	MessageTypeRequest MessageType = "REQ"
 )
 
 // Message is an interface for encoding and marshaling messages.
@@ -31,9 +33,9 @@ type Message interface {
 
 // AuthMessage TBD
 type AuthMessage struct {
-	Type      string `json:"type,omitempty"`
-	Challenge string `json:"subscription_id,omitempty"`
-	Event     *Event `json:"event,omitempty"`
+	Type      MessageType `json:"type,omitempty"`
+	Challenge string      `json:"subscription_id,omitempty"`
+	Event     *Event      `json:"event,omitempty"`
 }
 
 // NewAuthMessage TBD
@@ -81,8 +83,8 @@ func (m *AuthMessage) Unmarshal(data []byte) error {
 
 // CloseMessage TBD
 type CloseMessage struct {
-	Type           string `json:"type,omitempty"`
-	SubscriptionID string `json:"subscription_id,omitempty"`
+	Type           MessageType `json:"type,omitempty"`
+	SubscriptionID string      `json:"subscription_id,omitempty"`
 }
 
 // NewCloseMessage TBD
@@ -118,10 +120,10 @@ func (m *CloseMessage) Unmarshal(data []byte) error {
 
 // CountMessage TBD
 type CountMessage struct {
-	Type           string   `json:"type,omitempty"`
-	SubscriptionID string   `json:"subscription_id,omitempty"`
-	Count          *Count   `json:"count,omitempty"`
-	Filters        []Filter `json:"filter,omitempty"`
+	Type           MessageType `json:"type,omitempty"`
+	SubscriptionID string      `json:"subscription_id,omitempty"`
+	Count          *Count      `json:"count,omitempty"`
+	Filters        []Filter    `json:"filter,omitempty"`
 }
 
 // NewCountMessage TBD
@@ -175,8 +177,8 @@ func (m *CountMessage) Unmarshal(data []byte) error {
 
 // EOSEMessage TBD
 type EOSEMessage struct {
-	Type           string `json:"type,omitempty"`
-	SubscriptionID string `json:"subscription_id,omitempty"`
+	Type           MessageType `json:"type,omitempty"`
+	SubscriptionID string      `json:"subscription_id,omitempty"`
 }
 
 // NewEOSEMessage TBD
@@ -213,9 +215,9 @@ func (m *EOSEMessage) Unmarshal(data []byte) error {
 
 // EventMessage TBD
 type EventMessage struct {
-	Type           string `json:"type,omitempty"`
-	SubscriptionID string `json:"subscription_id,omitempty"`
-	Event          *Event `json:"event,omitempty"`
+	Type           MessageType `json:"type,omitempty"`
+	SubscriptionID string      `json:"subscription_id,omitempty"`
+	Event          *Event      `json:"event,omitempty"`
 }
 
 // NewEventMessage TBD
@@ -267,8 +269,8 @@ func (m *EventMessage) Unmarshal(data []byte) error {
 
 // NoticeMessage TBD
 type NoticeMessage struct {
-	Type   string `json:"type,omitempty"`
-	Notice string `json:"notice,omitempty"`
+	Type   MessageType `json:"type,omitempty"`
+	Notice string      `json:"notice,omitempty"`
 }
 
 // NewNoticeMessage TBD
@@ -304,10 +306,10 @@ func (m *NoticeMessage) Unmarshal(data []byte) error {
 
 // OkMessage TBD
 type OkMessage struct {
-	Type    string `json:"type,omitempty"`
-	EventID string `json:"event_id,omitempty"`
-	IsSaved bool   `json:"is_saved,omitempty"`
-	Message string `json:"message,omitempty"`
+	Type    MessageType `json:"type,omitempty"`
+	EventID string      `json:"event_id,omitempty"`
+	IsSaved bool        `json:"is_saved,omitempty"`
+	Message string      `json:"message,omitempty"`
 }
 
 // NewOkMessage TBD
@@ -353,9 +355,9 @@ func (m *OkMessage) Unmarshal(data []byte) error {
 
 // RequestMessage TBD
 type RequestMessage struct {
-	Type           string  `json:"type,omitempty"`
-	SubscriptionID string  `json:"subscription_id,omitempty"`
-	Filter         *Filter `json:"filter,omitempty"`
+	Type           MessageType `json:"type,omitempty"`
+	SubscriptionID string      `json:"subscription_id,omitempty"`
+	Filter         *Filter     `json:"filter,omitempty"`
 }
 
 // NewRequestMessage TBD

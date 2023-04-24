@@ -4,15 +4,21 @@
 package main
 
 import (
+	"io/fs"
 	"net/http"
 
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/internal/web"
 	"github.com/google/wire"
 )
 
-func buildClientServer() *http.Server {
+func provideFileServerHandler() http.Handler {
+	dist, _ := fs.Sub(web.FS, "dist")
+	return http.FileServer(http.FS(dist))
+}
+
+func buildHTTPServer() *http.Server {
 	wire.Build(wire.NewSet(
-		nostr.NewClient,
+		provideFileServerHandler,
 		wire.Struct(new(http.Server), "Handler"),
 	))
 	return &http.Server{}

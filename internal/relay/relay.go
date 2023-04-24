@@ -1,4 +1,4 @@
-package nostr
+package relay
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-nostr/nostr"
 	"nhooyr.io/websocket"
 )
 
@@ -19,10 +20,10 @@ const (
 	defaultPort     = 4317
 )
 
-type getInternetIdentifierHandler struct {
+type internetIdentifierHandler struct {
 }
 
-func (h *getInternetIdentifierHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *internetIdentifierHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data, _ := json.Marshal(struct {
 		Names  []string `json:"names,omitempty"`
 		Relays []string `json:"relays,omitempty"`
@@ -30,25 +31,22 @@ func (h *getInternetIdentifierHandler) ServeHTTP(w http.ResponseWriter, r *http.
 		Names:  []string{"bob"},
 		Relays: []string{},
 	})
-
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(data)
 }
 
-type websocketHandler struct {
+type subscribeHandler struct {
 }
 
-func (h *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *subscribeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		log.Printf("%v", err)
 		return
 	}
 	defer c.Close(websocket.StatusInternalError, "")
-
 	// TODO: add service call to add subscriber
-
 	if errors.Is(err, context.Canceled) {
 		return
 	}
@@ -63,38 +61,37 @@ func (h *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewRelay() *Relay {
-	getInternetIdentifierHandler := &getInternetIdentifierHandler{}
-	websocketHandler := &websocketHandler{}
 	serveMux := &http.ServeMux{}
-
-	serveMux.Handle("/.well-known/nostr.json", getInternetIdentifierHandler)
-	serveMux.Handle("/", websocketHandler)
-
-	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%+v:%+v", defaultHostname, defaultPort),
-		Handler: serveMux,
-	}
-
+	serveMux.Handle("/.well-known/nostr.json", &internetIdentifierHandler{})
+	serveMux.Handle("/", &subscribeHandler{})
 	return &Relay{
-		conns:  make(map[*websocket.Conn]struct{}),
-		server: httpServer,
+		conns: make(map[*websocket.Conn]struct{}),
+		server: &http.Server{
+			Addr:    fmt.Sprintf("%+v:%+v", defaultHostname, defaultPort),
+			Handler: serveMux,
+		},
 	}
 }
 
 type Relay struct {
-	Name          string       `json:"name,omitempty"`
-	Description   string       `json:"description,omitempty"`
-	PubKey        string       `json:"pub_key,omitempty"`
-	Contact       string       `json:"contact,omitempty"`
-	SupportedNIPs []string     `json:"supported_nips,omitempty"`
-	Software      string       `json:"software,omitempty"`
-	Version       string       `json:"version,omitempty"`
-	Limitations   *Limitations `json:"limitations,omitempty"`
+	Name          string             `json:"name,omitempty"`
+	Description   string             `json:"description,omitempty"`
+	PubKey        string             `json:"pub_key,omitempty"`
+	Contact       string             `json:"contact,omitempty"`
+	SupportedNIPs []string           `json:"supported_nips,omitempty"`
+	Software      string             `json:"software,omitempty"`
+	Version       string             `json:"version,omitempty"`
+	Limitations   *nostr.Limitations `json:"limitations,omitempty"`
 
-	server *http.Server
-	conns  map[*websocket.Conn]struct{}
-	mess   chan []byte
-	mu     sync.Mutex
+	messHandlers map[nostr.MessageType]func(mess nostr.Message)
+	server       *http.Server
+	conns        map[*websocket.Conn]struct{}
+	mess         chan []byte
+	mu           sync.Mutex
+}
+
+func (r *Relay) Handle(typ nostr.MessageType, fn func(mess nostr.Message)) {
+	r.messHandlers[typ] = fn
 }
 
 func (r *Relay) ListenAndServe() error {
@@ -105,51 +102,44 @@ func (r *Relay) Serve(l net.Listener) error {
 	return r.server.Serve(l)
 }
 
-func (r *Relay) Publish(mess Message) error {
+func (r *Relay) Publish(mess nostr.Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
-	byt, err := mess.Marshal()
+	data, err := mess.Marshal()
 	if err != nil {
 		return err
 	}
-
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for conn := range r.conns {
-		conn.Write(ctx, websocket.MessageText, byt)
+		conn.Write(ctx, websocket.MessageText, data)
 	}
-
 	return nil
 }
 
 func (r *Relay) Subscribe(u string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
 	conn, _, err := websocket.Dial(ctx, u, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
 	})
 	if err != nil {
 		return err
 	}
-
-	r.addConn(conn)
-
-	go r.listenConn(conn)
-
+	r.addConnection(conn)
+	go r.listenConnection(conn)
 	return nil
 }
 
-func (r *Relay) addConn(cl *websocket.Conn) {
+func (r *Relay) addConnection(cl *websocket.Conn) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	r.conns[cl] = struct{}{}
 }
 
-func (r *Relay) listenConn(conn *websocket.Conn) {
-	defer r.removeConn(conn)
+func (r *Relay) listenConnection(conn *websocket.Conn) {
+	defer r.removeConnection(conn)
 	for {
 		_, mess, err := conn.Read(context.Background())
 		if err != nil {
@@ -160,7 +150,7 @@ func (r *Relay) listenConn(conn *websocket.Conn) {
 	}
 }
 
-func (r *Relay) removeConn(conn *websocket.Conn) {
+func (r *Relay) removeConnection(conn *websocket.Conn) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	delete(r.conns, conn)

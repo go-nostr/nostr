@@ -1,5 +1,5 @@
 {
-  "name": "@go-nostr/client",
+  "name": "@go-nostr/web",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",

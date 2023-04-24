@@ -7,16 +7,24 @@
 package main
 
 import (
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/internal/web"
+	"io/fs"
 	"net/http"
 )
 
 // Injectors from wire.go:
 
-func buildClientServer() *http.Server {
-	handler := nostr.NewClient()
+func buildHTTPServer() *http.Server {
+	handler := provideFileServerHandler()
 	server := &http.Server{
 		Handler: handler,
 	}
 	return server
+}
+
+// wire.go:
+
+func provideFileServerHandler() http.Handler {
+	dist, _ := fs.Sub(web.FS, "dist")
+	return http.FileServer(http.FS(dist))
 }
