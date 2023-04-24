@@ -2,108 +2,83 @@ package nostr
 
 import (
 	"context"
-	"embed"
 	"fmt"
-	"io/fs"
-	"net/http"
 	"sync"
 	"time"
 
 	"nhooyr.io/websocket"
 )
 
-//go:generate npm run build -w internal/client
-//go:embed internal/client/dist
-var client embed.FS
-
 // NewClient TBD
-func NewClient() http.Handler {
-	dist, err := fs.Sub(client, "internal/client/dist")
-	if err != nil {
-		fmt.Printf("Error reading from fs: %+v", err)
-		return nil
-	}
+func NewClient() *Client {
 	return &Client{
-		fs:    dist,
-		mess:  make(chan []byte),
 		conns: make(map[*websocket.Conn]struct{}),
+		mess:  make(chan []byte),
 	}
 }
 
 // Client TBD
 type Client struct {
 	conns map[*websocket.Conn]struct{}
-	fs    fs.FS
 	mess  chan []byte
 	mu    sync.Mutex
 }
 
-// TODO: add event handlers
-func (cl *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	http.FileServer(http.FS(cl.fs)).ServeHTTP(w, r)
-}
-
+// Publish TBD
 func (cl *Client) Publish(mess Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
 	byt, err := mess.Marshal()
 	if err != nil {
 		return err
 	}
-
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-
 	for conn := range cl.conns {
 		conn.Write(ctx, websocket.MessageText, byt)
 	}
 	return nil
 }
 
+// Subscribe TBD
 func (cl *Client) Subscribe(u string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
 	conn, _, err := websocket.Dial(ctx, u, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
 	})
 	if err != nil {
 		return err
 	}
-
-	cl.addConn(conn)
-
-	go cl.listenConn(conn)
-
+	cl.addConnection(conn)
+	go cl.listenConnection(conn)
 	return nil
 }
 
-func (cl *Client) addConn(conn *websocket.Conn) {
+// addConnection TBD
+func (cl *Client) addConnection(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-
 	cl.conns[conn] = struct{}{}
 }
 
-func (cl *Client) listenConn(conn *websocket.Conn) {
-	defer cl.removeConn(conn)
-
+// listenConnection TBD
+func (cl *Client) listenConnection(conn *websocket.Conn) {
+	defer cl.removeConnection(conn)
 	for {
 		_, mess, err := conn.Read(context.Background())
 		if err != nil {
 			fmt.Printf("Error reading from relay: %v\n", err)
 			return
 		}
-
 		cl.mess <- mess
 	}
 }
 
-func (cl *Client) removeConn(conn *websocket.Conn) {
+// removeConnection TBD
+func (cl *Client) removeConnection(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-
 	delete(cl.conns, conn)
 	conn.Close(websocket.StatusNormalClosure, "closing connection")
 }

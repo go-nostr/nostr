@@ -1,20 +1,20 @@
-# Builder step for Angular client
+# Builder step for Angular PWA
 # - Use the official Node.js Alpine image as the base image
 # - Set the working directory to the root directory
 # - Copy package.json and package-lock.json to the container root
-# - Copy internal/client/package.json to the container internal/client directory
+# - Copy internal/web/package.json to the container internal/web directory
 # - Install Angular CLI globally
 # - Install dependencies defined in package.json using npm ci
 # - Copy the rest of the application code to the container
 # - Build the Angular client using the "build" script in package.json
-FROM node:alpine as client_builder
+FROM node:alpine as web_builder
 WORKDIR /
 COPY package.json package-lock.json ./
-COPY internal/client/package.json /internal/client/
+COPY internal/web/package.json /internal/web/
 RUN npm i -g @angular/cli
 RUN npm ci
 COPY . .
-RUN npm run build -w internal/client
+RUN npm run build -w internal/web
 
 # Builder step for Golang application
 # - Use the latest official Golang image as the base image
@@ -26,7 +26,7 @@ RUN npm run build -w internal/client
 # - Build the Go application binary named nostr
 FROM golang:latest as cmd_builder
 WORKDIR /go/src
-COPY --from=client_builder /internal/client/dist /go/src/internal/client/dist
+COPY --from=web_builder /internal/web/dist /go/src/internal/web/dist
 COPY . .
 RUN go get -d -v ./...
 RUN go install -v ./...
