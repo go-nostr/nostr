@@ -19,9 +19,14 @@ func NewClient() *Client {
 
 // Client TBD
 type Client struct {
-	conns map[*websocket.Conn]struct{}
-	mess  chan []byte
-	mu    sync.Mutex
+	conns        map[*websocket.Conn]struct{}
+	mess         chan []byte
+	messHandlers map[MessageType]func(mess Message)
+	mu           sync.Mutex
+}
+
+func (cl *Client) Handle(messType MessageType, fn func(mess Message)) {
+	cl.messHandlers[messType] = fn
 }
 
 // Publish TBD
