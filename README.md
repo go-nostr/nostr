@@ -23,6 +23,16 @@ Before starting development, make sure to install the following dependencies:
 
 ### Installation
 
+After prerequisites have been installed, use the following shell commands from the project directory to install dependencies:
+
+#### Install Go dependencies
+
+Fetch and install all Go dependencies for the project. The `-d` flag ensures that the packages are downloaded only, without installing them.
+
+```shell
+go get -d ./...
+```
+
 #### Install NPM dependencies
 
 Install all NPM dependencies for the monorepo workspaces. The -ws flag ensures that the installation is performed across all workspaces.
