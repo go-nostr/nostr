@@ -1,6 +1,7 @@
 package nostr_test
 
 import (
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-nostr/nostr"
@@ -28,6 +29,9 @@ func Test_NewClient(t *testing.T) {
 }
 
 func TestClient_Publish(t *testing.T) {
+	r := nostr.NewRelay()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
 	type args struct {
 		mess nostr.Message
 	}
@@ -56,7 +60,7 @@ func TestClient_Publish(t *testing.T) {
 			if cl == nil {
 				t.Fatalf("expected %v, to be not nil", cl)
 			}
-			if err := cl.Subscribe(tt.fields.addr); err != nil {
+			if err := cl.Subscribe(ts.URL); err != nil {
 				t.Fatalf("error: %v", err)
 			}
 			if err := cl.Publish(tt.args.mess); err != nil {
@@ -69,6 +73,9 @@ func TestClient_Publish(t *testing.T) {
 }
 
 func TestClient_Subscribe(t *testing.T) {
+	r := nostr.NewRelay()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
 	tests := []struct {
 		name string
 	}{
@@ -83,7 +90,7 @@ func TestClient_Subscribe(t *testing.T) {
 			if cl == nil {
 				t.Fatalf("expected %v, to be not nil", cl)
 			}
-			if err := cl.Subscribe("ws://0.0.0.0:3001"); err != nil {
+			if err := cl.Subscribe(ts.URL); err != nil {
 				t.Fatalf("Error: %v", err)
 			}
 			t.Log(cl)
