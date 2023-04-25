@@ -12,19 +12,27 @@ import (
 	"nhooyr.io/websocket"
 )
 
+// MessageHandlerFunc ...
+type MessageHandlerFunc func(mess Message)
+
+// Handle ...
+func (f MessageHandlerFunc) Handle(mess Message) {
+	f(mess)
+}
+
+type MessageHandler interface {
+	Handle(mess Message)
+}
+
 // New TBD
 func NewRelay() *Relay {
 	rl := &Relay{
 		conns:        make(map[*websocket.Conn]struct{}),
-		messHandlers: make(map[MessageType]func(mess Message)),
+		messHandlers: make(map[MessageType]MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
 	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.defaultInternetIdentifierHandleFunc)
 	rl.serveMux.HandleFunc("/", rl.defaultSubscribeHandleFunc)
-	rl.messHandlers[MessageTypeRequest] = func(mess Message) {
-		reqMessage := mess.(*RequestMessage)
-		fmt.Printf("Received request message: %v", reqMessage)
-	}
 	return rl
 }
 
@@ -39,16 +47,19 @@ type Relay struct {
 	Version       string       `json:"version,omitempty"`
 	Limitations   *Limitations `json:"limitations,omitempty"`
 
-	messHandlers map[MessageType]func(mess Message)
+	messHandlers map[MessageType]MessageHandler
 	serveMux     *http.ServeMux
 	conns        map[*websocket.Conn]struct{}
-	rawMess      chan []byte
 	mu           sync.Mutex
 	// TODO: add err chan
 }
 
-func (rl *Relay) Handle(messType MessageType, h func(mess Message)) {
-	rl.messHandlers[messType] = h
+func (rl *Relay) Handle(messType MessageType, messHandler MessageHandler) {
+	rl.messHandlers[messType] = messHandler
+}
+
+func (rl *Relay) HandleFunc(messType MessageType, h func(mess Message)) {
+	rl.messHandlers[messType] = MessageHandlerFunc(h)
 }
 
 func (rl *Relay) Publish(mess Message) error {
@@ -79,13 +90,32 @@ func (rl *Relay) addConn(cl *websocket.Conn) {
 func (rl *Relay) listenConn(conn *websocket.Conn) {
 	defer rl.removeConn(conn)
 	for {
-		_, rawMess, err := conn.Read(context.Background())
+		_, data, err := conn.Read(context.Background())
 		if err != nil {
 			fmt.Printf("error reading from connection: %v", err)
 			return
 		}
-		fmt.Printf("%s", rawMess)
-		rl.rawMess <- rawMess
+		var args []json.RawMessage
+		if err := json.Unmarshal(data, &args); err != nil {
+			fmt.Printf("error unmarshaling arguments: %v", err)
+			return
+		}
+		var messType MessageType
+		if err := json.Unmarshal(args[0], &messType); err != nil {
+			fmt.Printf("error unmarshaling message type: %v", err)
+			return
+		}
+		switch messType {
+		case MessageTypeRequest:
+			var reqMessage RequestMessage
+			if err := reqMessage.Unmarshal(data); err != nil {
+				fmt.Printf("error unmarshaling request message: %v", err)
+				return
+			}
+			go rl.messHandlers[MessageTypeRequest].Handle(&reqMessage)
+		default:
+			fmt.Printf("Read: %s", data)
+		}
 	}
 }
 

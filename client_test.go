@@ -29,7 +29,17 @@ func Test_NewClient(t *testing.T) {
 }
 
 func TestClient_Publish(t *testing.T) {
+	messChan := make(chan nostr.Message)
 	r := nostr.NewRelay()
+	r.HandleFunc(nostr.MessageTypeRequest, func(mess nostr.Message) {
+		byt, err := mess.Marshal()
+		if err != nil {
+			t.Errorf("error handling message request from test %v", err)
+			return
+		}
+		t.Logf("handled from test %s", byt)
+		messChan <- mess
+	})
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	type args struct {
@@ -66,8 +76,11 @@ func TestClient_Publish(t *testing.T) {
 			if err := cl.Publish(tt.args.mess); err != nil {
 				t.Fatalf("error: %v", err)
 			}
-			t.Logf("published mess: %v", tt.args.mess)
-			t.Logf("%v", cl)
+			mess := <-messChan
+			if mess == nil {
+				t.Fatalf("expected message to not be nil")
+			}
+			t.Logf("recieved message %v", mess)
 		})
 	}
 }
