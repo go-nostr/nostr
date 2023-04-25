@@ -7,6 +7,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/internal/web"
 	"io/fs"
 	"net/http"
@@ -14,9 +16,21 @@ import (
 
 // Injectors from wire.go:
 
-func buildHTTPServer() *http.Server {
-	handler := provideFileServerHandler()
+func buildClientServer() *http.Server {
+	string2 := provideClientAddr()
+	handler := provideClientHandler()
 	server := &http.Server{
+		Addr:    string2,
+		Handler: handler,
+	}
+	return server
+}
+
+func buildRelayServer() *http.Server {
+	string2 := provideRelayAddr()
+	handler := provideRelayHandler()
+	server := &http.Server{
+		Addr:    string2,
 		Handler: handler,
 	}
 	return server
@@ -24,7 +38,29 @@ func buildHTTPServer() *http.Server {
 
 // wire.go:
 
-func provideFileServerHandler() http.Handler {
-	dist, _ := fs.Sub(web.FS, "dist")
+const (
+	defaultHostname   = "0.0.0.0"
+	defaultClientPort = 4200
+	defaultRelayPort  = 3001
+)
+
+func provideClientAddr() string {
+	return fmt.Sprintf("%v:%v", defaultHostname, defaultClientPort)
+}
+
+func provideRelayAddr() string {
+	return fmt.Sprintf("%v:%v", defaultHostname, defaultRelayPort)
+}
+
+func provideClientHandler() http.Handler {
+	dist, err := fs.Sub(web.FS, "dist")
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+		return nil
+	}
 	return http.FileServer(http.FS(dist))
+}
+
+func provideRelayHandler() http.Handler {
+	return nostr.NewRelay()
 }
