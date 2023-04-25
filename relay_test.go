@@ -22,7 +22,7 @@ func TestRelay_WellKnownNostrEndpoint(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(fmt.Sprintf("%s/.well-known/nostr.json", ts.URL))
+	resp, err := http.Get(fmt.Sprintf("%s/.well-known/nostr.json?name=bob", ts.URL))
 	if err != nil {
 		t.Fatalf("Error fetching nostr.json: %v", err)
 	}
@@ -33,15 +33,15 @@ func TestRelay_WellKnownNostrEndpoint(t *testing.T) {
 	}
 
 	var data struct {
-		Names  []string `json:"names,omitempty"`
-		Relays []string `json:"relays,omitempty"`
+		Names  map[string]string `json:"names,omitempty"`
+		Relays map[string]string `json:"relays,omitempty"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		t.Fatalf("Error decoding JSON response: %v", err)
 	}
 
-	if len(data.Names) != 1 || data.Names[0] != "bob" {
-		t.Fatalf("Expected names to be [\"bob\"], got %v", data.Names)
+	if len(data.Names) != 1 || data.Names["bob"] != "bob" {
+		t.Fatalf("Expected names to be {\"bob\":\"bob\"}, got %v", data.Names)
 	}
 }
