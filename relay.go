@@ -12,22 +12,10 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// MessageHandlerFunc ...
-type MessageHandlerFunc func(mess Message)
-
-// Handle ...
-func (f MessageHandlerFunc) Handle(mess Message) {
-	f(mess)
-}
-
-type MessageHandler interface {
-	Handle(mess Message)
-}
-
 // New TBD
 func NewRelay() *Relay {
 	rl := &Relay{
-		conns:        make(map[*websocket.Conn]struct{}),
+		conn:         make(map[*websocket.Conn]struct{}),
 		messHandlers: make(map[MessageType]MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
@@ -49,30 +37,30 @@ type Relay struct {
 
 	messHandlers map[MessageType]MessageHandler
 	serveMux     *http.ServeMux
-	conns        map[*websocket.Conn]struct{}
+	conn         map[*websocket.Conn]struct{}
 	mu           sync.Mutex
 	// TODO: add err chan
 }
 
-func (rl *Relay) Handle(messType MessageType, messHandler MessageHandler) {
-	rl.messHandlers[messType] = messHandler
+func (rl *Relay) Handle(t MessageType, h MessageHandler) {
+	rl.messHandlers[t] = h
 }
 
-func (rl *Relay) HandleFunc(messType MessageType, h func(mess Message)) {
-	rl.messHandlers[messType] = MessageHandlerFunc(h)
+func (rl *Relay) HandleFunc(t MessageType, f func(mess Message)) {
+	rl.messHandlers[t] = MessageHandlerFunc(f)
 }
 
-func (rl *Relay) Publish(mess Message) error {
+func (rl *Relay) Publish(m Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	data, err := mess.Marshal()
+	byt, err := m.Marshal()
 	if err != nil {
 		return err
 	}
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	for conn := range rl.conns {
-		conn.Write(ctx, websocket.MessageText, data)
+	for conn := range rl.conn {
+		conn.Write(ctx, websocket.MessageText, byt)
 	}
 	return nil
 }
@@ -81,55 +69,55 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rl.serveMux.ServeHTTP(w, r)
 }
 
-func (rl *Relay) addConn(cl *websocket.Conn) {
+func (rl *Relay) addConnection(c *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	rl.conns[cl] = struct{}{}
+	rl.conn[c] = struct{}{}
 }
 
-func (rl *Relay) listenConn(conn *websocket.Conn) {
-	defer rl.removeConn(conn)
+func (rl *Relay) listenConnection(c *websocket.Conn) {
+	defer rl.removeConnection(c)
 	for {
-		_, data, err := conn.Read(context.Background())
+		_, byt, err := c.Read(context.Background())
 		if err != nil {
 			fmt.Printf("error reading from connection: %v", err)
 			return
 		}
 		var args []json.RawMessage
-		if err := json.Unmarshal(data, &args); err != nil {
+		if err := json.Unmarshal(byt, &args); err != nil {
 			fmt.Printf("error unmarshaling arguments: %v", err)
 			return
 		}
-		var messType MessageType
-		if err := json.Unmarshal(args[0], &messType); err != nil {
+		var t MessageType
+		if err := json.Unmarshal(args[0], &t); err != nil {
 			fmt.Printf("error unmarshaling message type: %v", err)
 			return
 		}
-		switch messType {
+		switch t {
 		case MessageTypeRequest:
-			var reqMessage RequestMessage
-			if err := reqMessage.Unmarshal(data); err != nil {
+			var m RequestMessage
+			if err := m.Unmarshal(byt); err != nil {
 				fmt.Printf("error unmarshaling request message: %v", err)
 				return
 			}
-			go rl.messHandlers[MessageTypeRequest].Handle(&reqMessage)
+			go rl.messHandlers[MessageTypeRequest].Handle(&m)
 		default:
-			fmt.Printf("Read: %s", data)
+			fmt.Printf("Read: %s", byt)
 		}
 	}
 }
 
-func (rl *Relay) removeConn(conn *websocket.Conn) {
+func (rl *Relay) removeConnection(c *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	delete(rl.conns, conn)
-	conn.Close(websocket.StatusNormalClosure, "Info: closing connection")
+	delete(rl.conn, c)
+	c.Close(websocket.StatusNormalClosure, "Info: closing connection")
 }
 
 func (rl *Relay) defaultInternetIdentifierHandleFunc(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	// HACK: replace with call to repository
-	data, _ := json.Marshal(struct {
+	byt, _ := json.Marshal(struct {
 		Names  map[string]string `json:"names,omitempty"`
 		Relays []string          `json:"relays,omitempty"`
 	}{
@@ -139,15 +127,15 @@ func (rl *Relay) defaultInternetIdentifierHandleFunc(w http.ResponseWriter, r *h
 	})
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Content-Type", "application/json")
-	w.Write(data)
+	w.Write(byt)
 }
 
 func (rl *Relay) defaultSubscribeHandleFunc(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, nil)
+	c, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		log.Printf("%v", err)
 		return
 	}
-	rl.addConn(conn)
-	go rl.listenConn(conn)
+	rl.addConnection(c)
+	go rl.listenConnection(c)
 }

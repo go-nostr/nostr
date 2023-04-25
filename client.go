@@ -21,12 +21,16 @@ func NewClient() *Client {
 type Client struct {
 	conns        map[*websocket.Conn]struct{}
 	mess         chan []byte
-	messHandlers map[MessageType]func(mess Message)
+	messHandlers map[MessageType]MessageHandler
 	mu           sync.Mutex
 }
 
-func (cl *Client) Handle(messType MessageType, fn func(mess Message)) {
-	cl.messHandlers[messType] = fn
+func (cl *Client) Handle(t MessageType, h MessageHandler) {
+	cl.messHandlers[t] = h
+}
+
+func (cl *Client) HandleFunc(t MessageType, f func(mess Message)) {
+	cl.messHandlers[t] = MessageHandlerFunc(f)
 }
 
 // Publish TBD
