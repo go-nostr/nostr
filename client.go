@@ -43,9 +43,7 @@ func (cl *Client) Publish(mess Message) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	for conn := range cl.conns {
-		if err := conn.Write(ctx, websocket.MessageText, byt); err != nil {
-			return err
-		}
+		go conn.Write(ctx, websocket.MessageText, byt)
 	}
 	return nil
 }

@@ -60,7 +60,7 @@ func (rl *Relay) Publish(m Message) error {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	for conn := range rl.conn {
-		conn.Write(ctx, websocket.MessageText, byt)
+		go conn.Write(ctx, websocket.MessageText, byt)
 	}
 	return nil
 }
