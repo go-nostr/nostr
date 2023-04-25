@@ -134,6 +134,7 @@ This project is built with the following core technologies:
 ## Authors
 
 - [@chantzlarge](https://github.com/chantzlarge)
+- [@vavrajosef](https://github.com/vavrajosef)
 
 ## Versioning
 
