@@ -25,6 +25,18 @@ const (
 	MessageTypeRequest MessageType = "REQ"
 )
 
+// MessageHandlerFunc ...
+type MessageHandlerFunc func(mess Message)
+
+// Handle ...
+func (f MessageHandlerFunc) Handle(mess Message) {
+	f(mess)
+}
+
+type MessageHandler interface {
+	Handle(mess Message)
+}
+
 // Message is an interface for encoding and marshaling messages.
 type Message interface {
 	Marshal() ([]byte, error)

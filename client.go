@@ -21,18 +21,21 @@ func NewClient() *Client {
 type Client struct {
 	conns        map[*websocket.Conn]struct{}
 	mess         chan []byte
-	messHandlers map[MessageType]func(mess Message)
+	messHandlers map[MessageType]MessageHandler
 	mu           sync.Mutex
 }
 
-func (cl *Client) Handle(messType MessageType, fn func(mess Message)) {
-	cl.messHandlers[messType] = fn
+func (cl *Client) Handle(t MessageType, h MessageHandler) {
+	cl.messHandlers[t] = h
+}
+
+func (cl *Client) HandleFunc(t MessageType, f func(mess Message)) {
+	cl.messHandlers[t] = MessageHandlerFunc(f)
 }
 
 // Publish TBD
 func (cl *Client) Publish(mess Message) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+	ctx := context.TODO()
 	byt, err := mess.Marshal()
 	if err != nil {
 		return err
@@ -40,7 +43,7 @@ func (cl *Client) Publish(mess Message) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	for conn := range cl.conns {
-		conn.Write(ctx, websocket.MessageText, byt)
+		go conn.Write(ctx, websocket.MessageText, byt)
 	}
 	return nil
 }
@@ -71,12 +74,13 @@ func (cl *Client) addConnection(conn *websocket.Conn) {
 func (cl *Client) listenConnection(conn *websocket.Conn) {
 	defer cl.removeConnection(conn)
 	for {
-		_, mess, err := conn.Read(context.Background())
+		_, byt, err := conn.Read(context.Background())
 		if err != nil {
 			fmt.Printf("Error reading from relay: %v\n", err)
 			return
 		}
-		cl.mess <- mess
+		fmt.Printf("Read from relay: %s", byt)
+		cl.mess <- byt
 	}
 }
 
