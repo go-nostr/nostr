@@ -2,7 +2,6 @@ package nostr
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 // NewClient TBD
 func NewClient() *Client {
 	return &Client{
+		err:   make(chan error),
 		conns: make(map[*websocket.Conn]struct{}),
 		mess:  make(chan []byte),
 	}
@@ -20,6 +20,7 @@ func NewClient() *Client {
 // Client TBD
 type Client struct {
 	conns        map[*websocket.Conn]struct{}
+	err          chan error
 	mess         chan []byte
 	messHandlers map[MessageType]MessageHandler
 	mu           sync.Mutex
@@ -76,10 +77,9 @@ func (cl *Client) listenConnection(conn *websocket.Conn) {
 	for {
 		_, byt, err := conn.Read(context.Background())
 		if err != nil {
-			fmt.Printf("Error reading from relay: %v\n", err)
+			cl.err <- err
 			return
 		}
-		fmt.Printf("Read from relay: %s", byt)
 		cl.mess <- byt
 	}
 }
