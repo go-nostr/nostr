@@ -1,0 +1,34 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - meta
+      - documentation
+    authors:
+      - dependabot
+      - auto-merge-bot
+  categories:
+    - title: Added
+      labels:
+        - semver:minor
+        - feature
+    - title: Changed
+      labels:
+        - semver:major
+        - breaking-change
+    - title: Deprecated
+      labels:
+        - deprecated
+    - title: Removed
+      labels:
+        - removed
+    - title: Fixed
+      labels:
+        - semver:patch
+        - bugfix
+    - title: Security
+      labels:
+        - security
+    - title: Other Changes
+      labels:
+        - "*"
