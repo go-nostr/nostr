@@ -58,6 +58,18 @@ Build all the services defined in the docker-compose.yml file. This command will
 docker-compose build
 ```
 
+### Build Hugo site
+
+Build the Hugo documentation site maintained in the `internal/docs` directory. This command will build the Hugo the documentation site for distribution, placing the output in the `internal/docs/public` directory.
+
+```shell
+hugo -s internal/docs    # exclude drafts
+```
+
+```shell
+hugo -s internal/docs -D # include drafts
+```
+
 ### Build NPM packages
 
 Compile and build all NPM packages in the monorepo, considering their interdependencies. The -ws flag ensures that the build is performed across all workspaces.
@@ -96,6 +108,18 @@ Execute all Go tests in the repository, including unit and integration tests. Th
 
 ```shell
 go test ./...
+```
+
+### Run Hugo server
+
+Build and serve the Hugo documentation site maintained in the `internal/docs` directory. This command will start the Hugo server and generate the documentation site, which can be accessed in a web browser.
+
+```shell
+hugo server -s internal/docs    # exclude drafts
+```
+
+```shell
+hugo server -s internal/docs -D # include drafts
 ```
 
 ### Run NPM tests
