@@ -27,14 +27,6 @@ type Client struct {
 	mu           sync.Mutex
 }
 
-func (cl *Client) Handle(typ MessageType, handler MessageHandler) {
-	cl.messHandlers[typ] = handler
-}
-
-func (cl *Client) HandleFunc(typ MessageType, handler func(mess Message)) {
-	cl.messHandlers[typ] = MessageHandlerFunc(handler)
-}
-
 // Publish TBD
 func (cl *Client) Publish(mess Message) error {
 	ctx := context.TODO()
