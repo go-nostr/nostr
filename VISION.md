@@ -108,6 +108,10 @@ Returns the current health status of the service.
 
 Returns the internet identifier for the given name query parameter.
 
+###### GET /
+
+Establishes a Websocket connection between client and relay.
+
 #### User Interfaces
 
 ##### Account Settings Page Component
