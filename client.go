@@ -2,6 +2,7 @@ package nostr
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -26,25 +27,17 @@ type Client struct {
 	mu           sync.Mutex
 }
 
-func (cl *Client) Handle(t MessageType, h MessageHandler) {
-	cl.messHandlers[t] = h
-}
-
-func (cl *Client) HandleFunc(t MessageType, f func(mess Message)) {
-	cl.messHandlers[t] = MessageHandlerFunc(f)
-}
-
 // Publish TBD
 func (cl *Client) Publish(mess Message) error {
 	ctx := context.TODO()
-	byt, err := mess.Marshal()
+	data, err := mess.Marshal()
 	if err != nil {
 		return err
 	}
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	for conn := range cl.conns {
-		go conn.Write(ctx, websocket.MessageText, byt)
+		go conn.Write(ctx, websocket.MessageText, data)
 	}
 	return nil
 }
@@ -59,35 +52,88 @@ func (cl *Client) Subscribe(u string) error {
 	if err != nil {
 		return err
 	}
-	cl.addConnection(conn)
-	go cl.listenConnection(conn)
+	cl.addConn(conn)
+	go cl.listenConn(conn)
 	return nil
 }
 
-// addConnection TBD
-func (cl *Client) addConnection(conn *websocket.Conn) {
+// addConn TBD
+func (cl *Client) addConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.conns[conn] = struct{}{}
 }
 
-// listenConnection TBD
-func (cl *Client) listenConnection(conn *websocket.Conn) {
-	defer cl.removeConnection(conn)
+// listenConn TBD
+func (cl *Client) listenConn(conn *websocket.Conn) {
+	defer cl.removeConn(conn)
 	for {
-		_, byt, err := conn.Read(context.Background())
+		_, data, err := conn.Read(context.Background())
 		if err != nil {
 			cl.err <- err
 			return
 		}
-		cl.mess <- byt
+		var args []json.RawMessage
+		if err := json.Unmarshal(data, &args); err != nil {
+			cl.err <- err
+			return
+		}
+		var typ MessageType
+		if err := json.Unmarshal(args[0], &typ); err != nil {
+			cl.err <- err
+			return
+		}
+		switch typ {
+		case MessageTypeAuth:
+			var mess AuthMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeAuth].Handle(&mess)
+		case MessageTypeCount:
+			var mess CountMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeCount].Handle(&mess)
+		case MessageTypeEOSE:
+			var mess EOSEMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeEOSE].Handle(&mess)
+		case MessageTypeEvent:
+			var mess EventMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeEvent].Handle(&mess)
+		case MessageTypeNotice:
+			var mess NoticeMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeNotice].Handle(&mess)
+		case MessageTypeOk:
+			var mess OkMessage
+			if err := mess.Unmarshal(data); err != nil {
+				cl.err <- err
+				return
+			}
+			go cl.messHandlers[MessageTypeOk].Handle(&mess)
+		}
 	}
 }
 
-// removeConnection TBD
-func (cl *Client) removeConnection(conn *websocket.Conn) {
+// removeConn TBD
+func (cl *Client) removeConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	delete(cl.conns, conn)
-	conn.Close(websocket.StatusNormalClosure, "closing connection")
+	conn.Close(websocket.StatusNormalClosure, "Info: closing connection")
 }
