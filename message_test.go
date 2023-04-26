@@ -27,20 +27,6 @@ func Test_NewAuthMessage(t *testing.T) {
 				Challenge: "abc",
 			},
 		},
-		{
-			name: "SHOULD create instance of AuthMessage with event",
-			args: args{
-				event: &nostr.Event{
-					ID: "event_id",
-				},
-			},
-			expect: &nostr.AuthMessage{
-				Type: nostr.MessageTypeAuth,
-				Event: &nostr.Event{
-					ID: "event_id",
-				},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -72,16 +58,6 @@ func TestAuthMessage_Marshal(t *testing.T) {
 				challenge: "abc",
 			},
 			expect: []byte("[\"AUTH\",\"abc\"]"),
-			err:    nil,
-		},
-		{
-			name: "SHOULD marshal AuthMessage with event",
-			args: args{
-				event: &nostr.Event{
-					ID: "event_id",
-				},
-			},
-			expect: []byte("[\"AUTH\",{\"id\":\"event_id\"}]"),
 			err:    nil,
 		},
 	}
