@@ -200,6 +200,10 @@ Enables users to securely copy their private key to their clipboard for backup o
 
 Enables users to copy their public key to their clipboard for sharing with others or for use in external applications.
 
+#### Get Connection
+
+Get Connection is a product function that establishes a secure client-relay WebSocket connection. This allows clients to communicate with the server in real-time and enables bi-directional data transfer. The connection is encrypted using industry-standard TLS protocols to ensure the security of the communication. Additionally, the connection can be configured to automatically reconnect in case of network disruptions or server downtime, ensuring a reliable connection. This feature is particularly useful for applications that require real-time updates or collaborative features, such as multiplayer games or collaborative editing tools.
+
 #### Get Internet Identifier
 
 Returns the internet identifier for a given name and optionally relays, if enabled. Supports NIP-05.
