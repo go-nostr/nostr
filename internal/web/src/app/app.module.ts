@@ -20,6 +20,7 @@ import { ListRelaysComponent } from './list-relays/list-relays.component';
 import { RemoveRelayFormComponent } from './remove-relay-form/remove-relay-form.component';
 import { ListEventsComponent } from './list-events/list-events.component';
 import { ListNotificationsComponent } from './list-notifications/list-notifications.component';
+import { NavBarComponent } from './nav-bar/nav-bar.component';
 
 @NgModule({
   declarations: [
@@ -40,7 +41,8 @@ import { ListNotificationsComponent } from './list-notifications/list-notificati
     ListRelaysComponent,
     RemoveRelayFormComponent,
     ListEventsComponent,
-    ListNotificationsComponent
+    ListNotificationsComponent,
+    NavBarComponent
   ],
   imports: [
     BrowserModule,
