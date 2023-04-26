@@ -42,6 +42,7 @@ type MessageHandler interface {
 type Message interface {
 	Marshal() ([]byte, error)
 	Unmarshal(data []byte) error
+	Validate() error
 }
 
 // AuthMessage TBD
@@ -100,6 +101,12 @@ func (m *AuthMessage) Unmarshal(data []byte) error {
 	return nil
 }
 
+// Validate TBD
+func (m *AuthMessage) Validate() error {
+	// TODO: implement validation
+	return nil
+}
+
 // CloseMessage TBD
 type CloseMessage struct {
 	Type           MessageType `json:"type,omitempty"`
@@ -134,6 +141,12 @@ func (m *CloseMessage) Unmarshal(data []byte) error {
 	if err := json.Unmarshal(args[1], &m.SubscriptionID); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Validate TBD
+func (m *CloseMessage) Validate() error {
+	// TODO: implement validation
 	return nil
 }
 
@@ -194,6 +207,12 @@ func (m *CountMessage) Unmarshal(data []byte) error {
 	return nil
 }
 
+// Validate TBD
+func (m *CountMessage) Validate() error {
+	// TODO: implement validation
+	return nil
+}
+
 // EOSEMessage TBD
 type EOSEMessage struct {
 	Type           MessageType `json:"type,omitempty"`
@@ -229,6 +248,12 @@ func (m *EOSEMessage) Unmarshal(data []byte) error {
 	if err := json.Unmarshal(args[1], &m.SubscriptionID); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Validate TBD
+func (m *EOSEMessage) Validate() error {
+	// TODO: implement validation
 	return nil
 }
 
@@ -286,6 +311,12 @@ func (m *EventMessage) Unmarshal(data []byte) error {
 	return nil
 }
 
+// Validate TBD
+func (m *EventMessage) Validate() error {
+	// TODO: implement validation
+	return nil
+}
+
 // NoticeMessage TBD
 type NoticeMessage struct {
 	Type   MessageType `json:"type,omitempty"`
@@ -320,6 +351,12 @@ func (m *NoticeMessage) Unmarshal(data []byte) error {
 	if err := json.Unmarshal(args[1], &m.Notice); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Validate TBD
+func (m *NoticeMessage) Validate() error {
+	// TODO: implement validation
 	return nil
 }
 
@@ -372,6 +409,12 @@ func (m *OkMessage) Unmarshal(data []byte) error {
 	return nil
 }
 
+// Validate TBD
+func (m *OkMessage) Validate() error {
+	// TODO: implement validation
+	return nil
+}
+
 // RequestMessage TBD
 type RequestMessage struct {
 	Type           MessageType `json:"type,omitempty"`
@@ -412,5 +455,11 @@ func (m *RequestMessage) Unmarshal(data []byte) error {
 	if err := json.Unmarshal(args[2], &m.Filter); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Validate TBD
+func (m *RequestMessage) Validate() error {
+	// TODO: implement validation
 	return nil
 }
