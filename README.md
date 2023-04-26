@@ -19,7 +19,6 @@ Before starting development, make sure to install the following dependencies:
 - [Install Go](https://go.dev/doc/install)
 - [Install Hugo](https://gohugo.io/installation/)
 - [Install NPM and NodeJS](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [Install Wire](https://github.com/google/wire#installing)
 
 ### Installation
 
