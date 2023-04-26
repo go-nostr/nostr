@@ -6,7 +6,7 @@
   "devDependencies": {},
   "scripts": {
     "build": "echo \"Warning: no build script specified\" && exit 0",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Warning: no test specified\" && exit 0"
   },
   "author": "C. Large <contact@chantzlarge.com> (http://chantzlarge.com/)",
   "license": "AGPL-3.0"
