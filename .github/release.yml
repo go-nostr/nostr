@@ -11,7 +11,7 @@ changelog:
     - title: Added
       labels:
         - semver:minor
-        - feature
+        - enhancement
     - title: Changed
       labels:
         - semver:major
