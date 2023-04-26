@@ -23,22 +23,4 @@ describe('AppService', () => {
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
-  
-  describe('AppService.prototype.GetHealth', () => { 
-    it('should get health', () => {
-      const mockResponse: GetHealthResponse = {
-        status: 'ok',
-        timestamp: Date.now()
-      };
-
-      service.GetHealth().subscribe(response => {
-        expect(response).toBeTruthy();
-        expect(response).toEqual(mockResponse);
-      });
-
-      const req = httpTestingController.expectOne('http://0.0.0.0:4317/health');
-      expect(req.request.method).toEqual('GET');
-      req.flush(mockResponse);
-    });
-  });
 });

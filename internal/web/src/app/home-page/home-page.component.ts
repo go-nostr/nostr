@@ -15,9 +15,5 @@ export class HomePageComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.appService.GetHealth().subscribe((res) => {
-      this.status = res.status
-      this.timestamp = res.timestamp
-    })
   }
 }

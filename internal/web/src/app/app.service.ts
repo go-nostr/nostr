@@ -23,12 +23,4 @@ export class AppService {
   constructor(
     private readonly httpClient: HttpClient,
   ) { }
-
-  GetHealth(): Observable<GetHealthResponse> {
-    return this.httpClient.get<GetHealthResponse>(`http://${defaultHostname}:${defaultPort}/health`)
-  }
-
-  GetInternetIdentifier(): Observable<GetHealthResponse> {
-    return this.httpClient.get<GetHealthResponse>(`http://${defaultHostname}:${defaultPort}/.well-known/nostr.json`)
-  }
 }
