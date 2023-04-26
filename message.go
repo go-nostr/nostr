@@ -2,6 +2,7 @@ package nostr
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 type MessageType string
@@ -78,8 +79,14 @@ func (m *AuthMessage) Unmarshal(data []byte) error {
 	if err := json.Unmarshal(data, &args); err != nil {
 		return err
 	}
+	if len(args) < 2 {
+		return errors.New("cannot unmarshal AuthMessage: invalid byte slice")
+	}
 	if err := json.Unmarshal(args[0], &m.Type); err != nil {
 		return err
+	}
+	if m.Type != MessageTypeAuth {
+		return errors.New("cannot unmarshal AuthMessage: invalid byte slice")
 	}
 	if len(args[1]) > 0 && args[1][0] == '{' {
 		if err := json.Unmarshal(args[1], &m.Event); err != nil {
@@ -100,7 +107,7 @@ type CloseMessage struct {
 }
 
 // NewCloseMessage TBD
-func NewCloseMessage(subscriptionID string) *CloseMessage {
+func NewCloseMessage(subscriptionID string) Message {
 	return &CloseMessage{
 		Type:           MessageTypeEvent,
 		SubscriptionID: subscriptionID,
