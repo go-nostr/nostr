@@ -2,8 +2,8 @@ name: Angular
 on:
   push:
 jobs:
-  client:
-    name: Client
+  web:
+    name: web
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
