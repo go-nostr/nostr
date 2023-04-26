@@ -3,7 +3,6 @@ package nostr
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -16,6 +15,7 @@ import (
 func NewRelay() *Relay {
 	rl := &Relay{
 		conn:         make(map[*websocket.Conn]struct{}),
+		err:          make(chan error),
 		messHandlers: make(map[MessageType]MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
@@ -35,11 +35,11 @@ type Relay struct {
 	Version       string       `json:"version,omitempty"`
 	Limitations   *Limitations `json:"limitations,omitempty"`
 
+	err          chan error
 	messHandlers map[MessageType]MessageHandler
 	serveMux     *http.ServeMux
 	conn         map[*websocket.Conn]struct{}
 	mu           sync.Mutex
-	// TODO: add err chan
 }
 
 func (rl *Relay) Handle(t MessageType, h MessageHandler) {
@@ -80,29 +80,27 @@ func (rl *Relay) listenConnection(c *websocket.Conn) {
 	for {
 		_, byt, err := c.Read(context.Background())
 		if err != nil {
-			fmt.Printf("error reading from connection: %v", err)
+			rl.err <- err
 			return
 		}
 		var args []json.RawMessage
 		if err := json.Unmarshal(byt, &args); err != nil {
-			fmt.Printf("error unmarshaling arguments: %v", err)
+			rl.err <- err
 			return
 		}
 		var t MessageType
 		if err := json.Unmarshal(args[0], &t); err != nil {
-			fmt.Printf("error unmarshaling message type: %v", err)
+			rl.err <- err
 			return
 		}
 		switch t {
 		case MessageTypeRequest:
 			var m RequestMessage
 			if err := m.Unmarshal(byt); err != nil {
-				fmt.Printf("error unmarshaling request message: %v", err)
+				rl.err <- err
 				return
 			}
 			go rl.messHandlers[MessageTypeRequest].Handle(&m)
-		default:
-			fmt.Printf("Read: %s", byt)
 		}
 	}
 }
