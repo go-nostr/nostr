@@ -3,7 +3,7 @@ package nostr
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -14,13 +14,16 @@ import (
 // New TBD
 func NewRelay() *Relay {
 	rl := &Relay{
-		conn:         make(map[*websocket.Conn]struct{}),
-		err:          make(chan error),
+		conn: make(map[*websocket.Conn]struct{}),
+		err:  make(chan error),
+		errHandler: func(err error) {
+			fmt.Printf("Error: %v", err)
+		},
 		messHandlers: make(map[MessageType]MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
-	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.defaultInternetIdentifierHandleFunc)
-	rl.serveMux.HandleFunc("/", rl.defaultSubscribeHandleFunc)
+	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.internetIdentifierHandlerFunc)
+	rl.serveMux.HandleFunc("/", rl.getConnectionHandlerFunc)
 	return rl
 }
 
@@ -36,104 +39,156 @@ type Relay struct {
 	Limitations   *Limitations `json:"limitations,omitempty"`
 
 	err          chan error
+	errHandler   func(err error)
 	messHandlers map[MessageType]MessageHandler
+	names        map[string]string
 	serveMux     *http.ServeMux
 	conn         map[*websocket.Conn]struct{}
 	mu           sync.Mutex
 }
 
-func (rl *Relay) Handle(t MessageType, h MessageHandler) {
-	rl.messHandlers[t] = h
+// HandleMessage TBD
+func (rl *Relay) HandleMessage(typ MessageType, handler MessageHandler) {
+	rl.messHandlers[typ] = handler
 }
 
-func (rl *Relay) HandleFunc(t MessageType, f func(mess Message)) {
-	rl.messHandlers[t] = MessageHandlerFunc(f)
+// HandleMessageFunc TBD
+func (rl *Relay) HandleMessageFunc(typ MessageType, handler func(mess Message)) {
+	rl.messHandlers[typ] = MessageHandlerFunc(handler)
 }
 
-func (rl *Relay) Publish(m Message) error {
+// Publish TBD
+func (rl *Relay) Publish(mess Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	byt, err := m.Marshal()
+	data, err := mess.Marshal()
 	if err != nil {
 		return err
 	}
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	for conn := range rl.conn {
-		go conn.Write(ctx, websocket.MessageText, byt)
+		go conn.Write(ctx, websocket.MessageText, data)
 	}
 	return nil
 }
 
+// ServeHTTP TBD
 func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rl.serveMux.ServeHTTP(w, r)
 }
 
-func (rl *Relay) addConnection(c *websocket.Conn) {
+// addConn TBD
+func (rl *Relay) addConn(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	rl.conn[c] = struct{}{}
+	rl.conn[conn] = struct{}{}
 }
 
-func (rl *Relay) listenConnection(c *websocket.Conn) {
-	defer rl.removeConnection(c)
+// internetIdentifierHandlerFunc TBD
+func (rl *Relay) internetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf("{\"%v\":\"%v\"}", name, rl.names[name])))
+}
+
+// getConnectionHandlerFunc TBD
+func (rl *Relay) getConnectionHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	conn, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		rl.err <- err
+		return
+	}
+	rl.addConn(conn)
+	go rl.listenConn(conn)
+}
+
+// listenConn TBD
+func (rl *Relay) listenConn(c *websocket.Conn) {
+	defer rl.removeConn(c)
 	for {
-		_, byt, err := c.Read(context.Background())
+		_, data, err := c.Read(context.Background())
 		if err != nil {
 			rl.err <- err
 			return
 		}
 		var args []json.RawMessage
-		if err := json.Unmarshal(byt, &args); err != nil {
+		if err := json.Unmarshal(data, &args); err != nil {
 			rl.err <- err
 			return
 		}
-		var t MessageType
-		if err := json.Unmarshal(args[0], &t); err != nil {
+		var typ MessageType
+		if err := json.Unmarshal(args[0], &typ); err != nil {
 			rl.err <- err
 			return
 		}
-		switch t {
-		case MessageTypeRequest:
-			var m RequestMessage
-			if err := m.Unmarshal(byt); err != nil {
+		switch typ {
+		case MessageTypeAuth:
+			var mess AuthMessage
+			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeRequest].Handle(&m)
+			go rl.messHandlers[MessageTypeAuth].Handle(&mess)
+		case MessageTypeClose:
+			var mess CloseMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeClose].Handle(&mess)
+		case MessageTypeCount:
+			var mess CountMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeCount].Handle(&mess)
+		case MessageTypeEOSE:
+			var mess EOSEMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeEOSE].Handle(&mess)
+		case MessageTypeEvent:
+			var mess EventMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeEvent].Handle(&mess)
+		case MessageTypeNotice:
+			var mess NoticeMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeNotice].Handle(&mess)
+		case MessageTypeOk:
+			var mess OkMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeOk].Handle(&mess)
+		case MessageTypeRequest:
+			var mess RequestMessage
+			if err := mess.Unmarshal(data); err != nil {
+				rl.err <- err
+				return
+			}
+			go rl.messHandlers[MessageTypeRequest].Handle(&mess)
 		}
 	}
 }
 
-func (rl *Relay) removeConnection(c *websocket.Conn) {
+// removeConn TBD
+func (rl *Relay) removeConn(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	delete(rl.conn, c)
-	c.Close(websocket.StatusNormalClosure, "Info: closing connection")
-}
-
-func (rl *Relay) defaultInternetIdentifierHandleFunc(w http.ResponseWriter, r *http.Request) {
-	name := r.URL.Query().Get("name")
-	// HACK: replace with call to repository
-	byt, _ := json.Marshal(struct {
-		Names  map[string]string `json:"names,omitempty"`
-		Relays []string          `json:"relays,omitempty"`
-	}{
-		Names: map[string]string{
-			name: name,
-		},
-	})
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Content-Type", "application/json")
-	w.Write(byt)
-}
-
-func (rl *Relay) defaultSubscribeHandleFunc(w http.ResponseWriter, r *http.Request) {
-	c, err := websocket.Accept(w, r, nil)
-	if err != nil {
-		log.Printf("%v", err)
-		return
-	}
-	rl.addConnection(c)
-	go rl.listenConnection(c)
+	delete(rl.conn, conn)
+	conn.Close(websocket.StatusNormalClosure, "Info: closing connection")
 }

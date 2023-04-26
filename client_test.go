@@ -31,7 +31,7 @@ func Test_NewClient(t *testing.T) {
 func TestClient_Publish(t *testing.T) {
 	messChan := make(chan nostr.Message)
 	r := nostr.NewRelay()
-	r.HandleFunc(nostr.MessageTypeRequest, func(mess nostr.Message) {
+	r.HandleMessageFunc(nostr.MessageTypeRequest, func(mess nostr.Message) {
 		byt, err := mess.Marshal()
 		if err != nil {
 			t.Errorf("error handling message request from test %v", err)

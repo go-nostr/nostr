@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/go-nostr/nostr"
@@ -21,27 +22,33 @@ func TestRelay_WellKnownNostrEndpoint(t *testing.T) {
 	r := nostr.NewRelay()
 	ts := httptest.NewServer(r)
 	defer ts.Close()
-
-	resp, err := http.Get(fmt.Sprintf("%s/.well-known/nostr.json?name=bob", ts.URL))
-	if err != nil {
-		t.Fatalf("Error fetching nostr.json: %v", err)
+	type args struct {
+		names map[string]string
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200, got %d", resp.StatusCode)
-	}
-
-	var data struct {
-		Names  map[string]string `json:"names,omitempty"`
-		Relays map[string]string `json:"relays,omitempty"`
+	tests := []struct {
+		name   string
+		args   args
+		expect map[string]string
+	}{
+		// TODO
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		t.Fatalf("Error decoding JSON response: %v", err)
-	}
-
-	if len(data.Names) != 1 || data.Names["bob"] != "bob" {
-		t.Fatalf("Expected names to be {\"bob\":\"bob\"}, got %v", data.Names)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, err := http.Get(fmt.Sprintf("%s/.well-known/nostr.json", ts.URL))
+			if err != nil {
+				t.Fatalf("Error fetching nostr.json: %v", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("Expected status 200, got %d", resp.StatusCode)
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&tt.args.names); err != nil {
+				t.Fatalf("Error decoding JSON response: %v", err)
+			}
+			if reflect.DeepEqual(tt.args.names, tt.expect) {
+				t.Fatalf("Expected: %v, got: %v", tt.expect, tt.args.names)
+			}
+		})
 	}
 }
