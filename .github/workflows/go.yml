@@ -2,8 +2,8 @@ name: Go
 on:
   push:
 jobs:
-  go:
-    name: Go
+  cmd:
+    name: CMD
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
