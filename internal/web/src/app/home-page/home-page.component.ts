@@ -13,7 +13,4 @@ export class HomePageComponent implements OnInit {
   constructor(
     private readonly appService: AppService,
   ) { }
-
-  ngOnInit() {
-  }
 }
