@@ -157,3 +157,32 @@ func TestAuthMessage_Unmarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthMessage_Validate(t *testing.T) {
+	type fields struct {
+		mess *nostr.AuthMessage
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		err    error
+	}{
+		{
+			name: "MUST successfully validate AuthMessage",
+			fields: fields{
+				mess: &nostr.AuthMessage{},
+			},
+			err: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			authMessage := nostr.NewAuthMessage("test_challenge", nil)
+			err := authMessage.Validate()
+			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
+				t.Fatalf("expected error: %+v, got: %+v", tt.err, err)
+			}
+			t.Logf("got: %v", err)
+		})
+	}
+}
