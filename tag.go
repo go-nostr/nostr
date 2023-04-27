@@ -1,6 +1,8 @@
 package nostr
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type TagType string
 
@@ -42,41 +44,73 @@ type Tag interface {
 	Unmarshal(data []byte) error
 }
 
+type BaseTag []any
+
+func NewBaseTag(typ TagType, v ...any) Tag {
+	return BaseTag([]any{typ, v})
+}
+
+func (t BaseTag) Get(i int) (any, error) {
+	return t[i], nil
+}
+
+func (t BaseTag) Set(i int, v any) error {
+	t[i] = v
+	return nil
+}
+
+func (t BaseTag) Marshal() ([]byte, error) {
+	return json.Marshal(t)
+}
+
+func (t BaseTag) Type() TagType {
+	return t[0].(TagType)
+}
+
+func (t BaseTag) Values() []any {
+	return t
+}
+
+func (t BaseTag) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, &t)
+}
+
+func (t BaseTag) Validate() error {
+	return nil
+}
+
 // NewAmountTag creates a new AmountTag with the provided amount.
-func NewAmountTag(amount uint32) Tag {
+func NewAmountTag(amount float64) Tag {
 	return &AmountTag{
-		TagTypeAmount,
-		amount,
+		BaseTag: NewBaseTag(TagTypeAmount, amount).(BaseTag),
 	}
 }
 
 // AmountTag TBD
 type AmountTag struct {
-	Type   TagType `json:"type,omitempty"`
-	Amount uint32  `json:"amount,omitempty"`
+	BaseTag
+}
+
+// Amount TBD
+func (t *AmountTag) Amount() float64 {
+	v, err := t.BaseTag.Get(1)
+	if err != nil {
+		panic("asdfasdf")
+	}
+	amount, ok := v.(float64)
+	if !ok {
+		panic("not ok")
+	}
+	return amount
 }
 
 // Marshal TBD
 func (t *AmountTag) Marshal() ([]byte, error) {
-	return json.Marshal([]interface{}{
-		t.Type,
-		t.Amount,
-	})
+	return t.BaseTag.Marshal()
 }
 
 // Unmarshal TBD
 func (t *AmountTag) Unmarshal(data []byte) error {
-	args := make([]json.RawMessage, 2)
-	if err := json.Unmarshal(data, &args); err != nil {
-		return err
-	}
-	if err := json.Unmarshal(args[0], &t.Type); err != nil {
-		return err
-	}
-	if err := json.Unmarshal(args[1], &t.Amount); err != nil {
-		return err
-	}
-	return nil
+	t.BaseTag = NewBaseTag(TagTypeAmount).(BaseTag)
+	return t.BaseTag.Unmarshal(data)
 }
-
-// TODO: Add other tags or take different approach
