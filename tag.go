@@ -2,6 +2,7 @@ package nostr
 
 import (
 	"encoding/json"
+	"log"
 )
 
 type TagType string
@@ -41,21 +42,26 @@ const (
 // Tag is an interface for different types of tags.
 type Tag interface {
 	Marshal() ([]byte, error)
+	Type() TagType
 	Unmarshal(data []byte) error
 }
 
 type BaseTag []any
 
-func NewBaseTag(typ TagType, v ...any) Tag {
-	return BaseTag([]any{typ, v})
+func NewBaseTag(typ TagType, arg ...any) Tag {
+	t := BaseTag([]any{typ})
+	for _, v := range arg {
+		t = append(t, v)
+	}
+	return t
 }
 
-func (t BaseTag) Get(i int) (any, error) {
-	return t[i], nil
+func (t BaseTag) Get(index int) (any, error) {
+	return t[index], nil
 }
 
-func (t BaseTag) Set(i int, v any) error {
-	t[i] = v
+func (t BaseTag) Set(index int, v any) error {
+	t[index] = v
 	return nil
 }
 
@@ -97,6 +103,7 @@ func (t *AmountTag) Amount() float64 {
 	if err != nil {
 		panic("asdfasdf")
 	}
+	log.Printf("%v", v)
 	amount, ok := v.(float64)
 	if !ok {
 		panic("not ok")

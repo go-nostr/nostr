@@ -27,11 +27,11 @@ func Test_NewAmountTag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tag := &nostr.AmountTag{}
+			tag := nostr.NewAmountTag(tt.args.amount)
 			if tag.Type() != nostr.TagTypeAmount {
 				t.Errorf("incorrect tag type")
 			}
-			if tag.Amount() != tt.args.amount {
+			if tag.(*nostr.AmountTag).Amount() != tt.args.amount {
 				t.Errorf("incorrect amount")
 			}
 			t.Logf("%+v", tag)
