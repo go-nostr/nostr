@@ -9,9 +9,8 @@ import (
 
 func Test_NewAmountTag(t *testing.T) {
 	type args struct {
-		amount uint32
+		amount float64
 	}
-
 	tests := []struct {
 		name   string
 		args   args
@@ -22,27 +21,19 @@ func Test_NewAmountTag(t *testing.T) {
 			args: args{
 				amount: 42,
 			},
-			expect: &nostr.AmountTag{
-				Type:   nostr.TagTypeAmount,
-				Amount: 42,
-			},
+			expect: &nostr.AmountTag{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tag := &nostr.AmountTag{
-				Type:   nostr.TagTypeAmount,
-				Amount: tt.args.amount,
-			}
-			if tag.Type != nostr.TagTypeAmount {
+			tag := nostr.NewAmountTag(tt.args.amount)
+			if tag.Type() != nostr.TagTypeAmount {
 				t.Errorf("incorrect tag type")
 			}
-
-			if tag.Amount != tt.args.amount {
+			if tag.(*nostr.AmountTag).Amount() != tt.args.amount {
 				t.Errorf("incorrect amount")
 			}
-
 			t.Logf("%+v", tag)
 		})
 	}
@@ -50,7 +41,7 @@ func Test_NewAmountTag(t *testing.T) {
 
 func TestAmountTag_Marshal(t *testing.T) {
 	type fields struct {
-		amount uint32
+		amount float64
 	}
 
 	tests := []struct {
@@ -85,10 +76,13 @@ func TestAmountTag_Unmarshal(t *testing.T) {
 	type args struct {
 		data []byte
 	}
-
+	type fields struct {
+		amount float64
+	}
 	tests := []struct {
 		name   string
 		args   args
+		fields fields
 		expect *nostr.AmountTag
 	}{
 		{
@@ -96,23 +90,22 @@ func TestAmountTag_Unmarshal(t *testing.T) {
 			args: args{
 				data: []byte("[\"amount\",42]"),
 			},
+			fields: fields{
+				amount: 100,
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			amountTag := &nostr.AmountTag{}
-
 			err := amountTag.Unmarshal(tt.args.data)
 			if err != nil {
 				t.Errorf("%+v", err)
 			}
-
 			if reflect.DeepEqual(amountTag, tt.expect) {
 				t.Errorf("expected %+v, got %+v", amountTag, tt.expect)
 			}
-
-			t.Logf("%+v", amountTag)
 		})
 	}
 }
