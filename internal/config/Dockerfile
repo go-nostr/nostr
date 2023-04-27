@@ -9,11 +9,11 @@
 # - Build the Angular client using the "build" script in package.json
 FROM node:alpine as web_builder
 WORKDIR /
-COPY package.json package-lock.json ./
-COPY internal/web/package.json /internal/web/
+COPY ../../package.json ../../package-lock.json ./
+COPY ../../internal/web/package.json ./internal/web/
 RUN npm i -g @angular/cli
 RUN npm ci
-COPY . .
+COPY ../.. ./
 RUN npm run build -w internal/web
 
 # Builder step for Golang application
@@ -26,8 +26,8 @@ RUN npm run build -w internal/web
 # - Build the Go application binary named nostr
 FROM golang:latest as cmd_builder
 WORKDIR /go/src
-COPY --from=web_builder /internal/web/dist /go/src/internal/web/dist
-COPY . .
+COPY --from=web_builder ../../internal/web/dist/ /go/src/internal/web/dist/
+COPY ../.. ./
 RUN go get -d -v ./...
 RUN go install -v ./...
 RUN go build -v -o /go/bin/nostr ${PWD}/internal/cmd
@@ -39,3 +39,6 @@ RUN go build -v -o /go/bin/nostr ${PWD}/internal/cmd
 FROM gcr.io/distroless/base
 COPY --from=cmd_builder /go/bin/nostr /nostr
 CMD ["/nostr"]
+
+# Default relay and client port
+EXPOSE 3001 4200
