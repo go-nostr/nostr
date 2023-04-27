@@ -47,7 +47,7 @@ npm i -ws
 Create a Docker image for the application by using the Dockerfile in the repository. This command will build the image and tag it with the name 'nostr'.
 
 ```shell
-docker build -t nostr .
+docker build -t nostr -f internal/config/Dockerfile .
 ```
 
 ### Build Docker services
@@ -55,7 +55,7 @@ docker build -t nostr .
 Build all the services defined in the docker-compose.yml file. This command will create Docker images for each service and store them locally.
 
 ```shell
-docker-compose build
+docker-compose -f ./internal/config/docker-compose.yml build --no-cache
 ```
 
 ### Build Hugo site
@@ -94,12 +94,20 @@ Automatically generate code for Go dependencies, such as mocks, based on the sou
 go generate ./...
 ```
 
+### Run Docker image
+
+Run the Docker image defined in the Dockerfile file. This command will run the image and display the logs in the console.
+
+```shell
+docker run -p 3001:3001 -p 4200:4200 nostr
+```
+
 ### Run Docker services
 
 Start all the Docker services defined in the docker-compose.yml file. This command will run the containers and display the logs in the console.
 
 ```shell
-docker-compose up
+docker-compose -f ./internal/config/docker-compose.yml up --build
 ```
 
 ### Run Go tests

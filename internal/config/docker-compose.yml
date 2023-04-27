@@ -1,7 +1,9 @@
 version: '3.8'
 services:
   nostr:
-    build: .
+    build:
+      context: ../..
+      dockerfile: ./internal/config/Dockerfile
     ports:
       - 4200:4200
       - 3001:3001
