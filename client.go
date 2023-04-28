@@ -19,10 +19,21 @@ func NewClient() *Client {
 
 // Client TBD
 type Client struct {
-	conns        map[*websocket.Conn]struct{}
-	err          chan error
-	messHandlers map[MessageType]MessageHandler
-	mu           sync.Mutex
+	conns         map[*websocket.Conn]struct{}
+	err           chan error
+	eventHandlers map[EventKind]EventHandler
+	messHandlers  map[MessageType]MessageHandler
+	mu            sync.Mutex
+}
+
+// HandleEvent TBD
+func (cl *Client) HandleEvent(kind EventKind, handler EventHandler) {
+	cl.eventHandlers[kind] = handler
+}
+
+// HandleEventFunc TBD
+func (cl *Client) HandleEventFunc(kind EventKind, handler func(kind EventKind, evt Event)) {
+	cl.eventHandlers[kind] = EventHandlerFunc(handler)
 }
 
 // Publish TBD

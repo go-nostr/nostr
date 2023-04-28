@@ -38,13 +38,34 @@ type Relay struct {
 	Version       string       `json:"version,omitempty"`
 	Limitations   *Limitations `json:"limitations,omitempty"`
 
-	err          chan error
-	errHandler   func(err error)
-	messHandlers map[MessageType]MessageHandler
-	names        map[string]string
-	serveMux     *http.ServeMux
-	conn         map[*websocket.Conn]struct{}
-	mu           sync.Mutex
+	err           chan error
+	errHandler    func(err error)
+	eventHandlers map[EventKind]EventHandler
+	messHandlers  map[MessageType]MessageHandler
+	names         map[string]string
+	serveMux      *http.ServeMux
+	conn          map[*websocket.Conn]struct{}
+	mu            sync.Mutex
+}
+
+// Handle TBD
+func (rl *Relay) Handle(pattern string, handler http.Handler) {
+	rl.serveMux.Handle(pattern, handler)
+}
+
+// HandleFunc TBD
+func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, r *http.Request)) {
+	rl.serveMux.HandleFunc(pattern, handler)
+}
+
+// HandleEvent TBD
+func (rl *Relay) HandleEvent(kind EventKind, handler EventHandler) {
+	rl.eventHandlers[kind] = handler
+}
+
+// HandleEventFunc TBD
+func (rl *Relay) HandleEventFunc(kind EventKind, handler func(kind EventKind, evt Event)) {
+	rl.eventHandlers[kind] = EventHandlerFunc(handler)
 }
 
 // HandleMessage TBD
