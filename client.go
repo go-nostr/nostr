@@ -14,7 +14,6 @@ func NewClient() *Client {
 	return &Client{
 		err:   make(chan error),
 		conns: make(map[*websocket.Conn]struct{}),
-		mess:  make(chan []byte),
 	}
 }
 
@@ -22,7 +21,6 @@ func NewClient() *Client {
 type Client struct {
 	conns        map[*websocket.Conn]struct{}
 	err          chan error
-	mess         chan []byte
 	messHandlers map[MessageType]MessageHandler
 	mu           sync.Mutex
 }
