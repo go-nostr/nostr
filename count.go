@@ -1,5 +1,6 @@
 package nostr
 
+// Count TBD
 type Count struct {
-	Count uint32 `json:"count,omitempty"`
+	Count float64 `json:"count,omitempty"`
 }

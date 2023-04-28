@@ -1,5 +1,6 @@
 package nostr
 
+// NIP TBD
 type NIP int64
 
 const (

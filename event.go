@@ -45,11 +45,6 @@ type Event interface {
 	Validate() error
 }
 
-// newBaseEvent TBD
-func newBaseEvent() Event {
-	return &BaseEvent{}
-}
-
 type BaseEvent struct {
 	ID        string    `json:"id,omitempty"`
 	PubKey    string    `json:"pub_key,omitempty"`

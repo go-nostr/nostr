@@ -292,3 +292,70 @@ func TestCloseMessage_Validate(t *testing.T) {
 		})
 	}
 }
+
+func Test_NewCountMessage(t *testing.T) {
+	type args struct {
+		subscriptionID string
+		count          *nostr.Count
+	}
+	tests := []struct {
+		name   string
+		args   args
+		expect *nostr.CountMessage
+	}{
+		{
+			name: "MUST create a new CountMessage with given subscription ID and count",
+			args: args{
+				subscriptionID: "subscription-id",
+				count:          &nostr.Count{Count: 10},
+			},
+			expect: &nostr.CountMessage{nostr.BaseMessage{string(nostr.MessageTypeCount), "subscription-id", &nostr.Count{Count: 10}}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			countMessage := nostr.NewCountMessage(tt.args.subscriptionID, tt.args.count)
+			if !reflect.DeepEqual(countMessage, tt.expect) {
+				t.Errorf("expected %v, got %v", tt.expect, countMessage)
+			}
+			t.Logf("got %+v", countMessage)
+		})
+	}
+}
+
+func TestCountMessage_Marshal(t *testing.T) {
+	type args struct {
+		subscriptionID string
+		count          *nostr.Count
+	}
+	tests := []struct {
+		name   string
+		args   args
+		expect []byte
+		err    error
+	}{
+		{
+			name: "MUST successfully marshal CountMessage to byte slice",
+			args: args{
+				subscriptionID: "subscription-id",
+				count:          &nostr.Count{Count: 10},
+			},
+			expect: []byte("[\"COUNT\",\"subscription-id\",{\"count\":10}]"),
+			err:    nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			countMessage := nostr.NewCountMessage(tt.args.subscriptionID, tt.args.count)
+			data, err := countMessage.Marshal()
+			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
+				t.Fatalf("expected error: %s, got error: %s", tt.err, err)
+				return
+			}
+			if !reflect.DeepEqual(data, tt.expect) {
+				t.Fatalf("expected: %s, got: %s", tt.expect, data)
+			}
+			t.Logf("got: %+s", data)
+		})
+	}
+}
