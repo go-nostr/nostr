@@ -42,6 +42,12 @@ npm i -ws
 
 ## Usage
 
+To instantly set up and run the Nostr application, simply execute the following Docker command. This will pull the latest Nostr image, map the necessary ports, and get your local instance up and running:
+
+```shell
+docker run -p 3001:3001 -p 4200:4200 ghcr.io/go-nostr/nostr:latest
+```
+
 ### Build Docker image
 
 Create a Docker image for the application by using the Dockerfile in the repository. This command will build the image and tag it with the name 'nostr'.
