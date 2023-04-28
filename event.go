@@ -38,6 +38,19 @@ const (
 	EventKindApplicationSpecificData EventKind = 30078 // Event for managing application-specific data
 )
 
+// EventHandlerFunc TBD
+type EventHandlerFunc func(kind EventKind, evt Event)
+
+// Handle TBD
+func (fn EventHandlerFunc) Handle(kind EventKind, evt Event) {
+	fn(kind, evt)
+}
+
+// EventHandler TBD
+type EventHandler interface {
+	Handle(kind EventKind, evt Event)
+}
+
 // Event represents an event with a specified kind.
 type Event interface {
 	Marshal() ([]byte, error)
@@ -45,6 +58,7 @@ type Event interface {
 	Validate() error
 }
 
+// BaseEvent TBD
 type BaseEvent struct {
 	ID        string    `json:"id,omitempty"`
 	PubKey    string    `json:"pub_key,omitempty"`
