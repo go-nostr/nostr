@@ -75,9 +75,10 @@ func (cl *Client) addConn(conn *websocket.Conn) {
 
 // listenConn TBD
 func (cl *Client) listenConn(conn *websocket.Conn) {
+	ctx := context.Background()
 	defer cl.removeConn(conn)
 	for {
-		_, data, err := conn.Read(context.Background())
+		_, data, err := conn.Read(ctx)
 		if err != nil {
 			cl.err <- err
 			return
@@ -95,46 +96,43 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 		switch typ {
 		case MessageTypeAuth:
 			var mess AuthMessage
-			if err := mess.Unmarshal(data); err != nil {
-				cl.err <- err
-				return
-			}
+			mess.Unmarshal(data)
+			go cl.messHandlers[typ].Handle(&mess)
+		case MessageTypeClose:
+			var mess CloseMessage
+			mess.Unmarshal(data)
 			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeCount:
 			var mess CountMessage
-			if err := mess.Unmarshal(data); err != nil {
-				cl.err <- err
-				return
-			}
+			mess.Unmarshal(data)
 			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEOSE:
 			var mess EOSEMessage
-			if err := mess.Unmarshal(data); err != nil {
-				cl.err <- err
-				return
-			}
+			mess.Unmarshal(data)
 			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEvent:
 			var mess EventMessage
-			if err := mess.Unmarshal(data); err != nil {
-				cl.err <- err
-				return
-			}
+			mess.Unmarshal(data)
 			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeNotice:
 			var mess NoticeMessage
-			if err := mess.Unmarshal(data); err != nil {
-				cl.err <- err
-				return
-			}
+			mess.Unmarshal(data)
 			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeOk:
 			var mess OkMessage
-			if err := mess.Unmarshal(data); err != nil {
+			mess.Unmarshal(data)
+			go cl.messHandlers[typ].Handle(&mess)
+		case MessageTypeRequest:
+			var mess RequestMessage
+			mess.Unmarshal(data)
+			go cl.messHandlers[typ].Handle(&mess)
+		default:
+			data, err := NewNoticeMessage("unrecognized message type").Marshal()
+			if err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[typ].Handle(&mess)
+			conn.Write(ctx, websocket.MessageText, data)
 		}
 	}
 }
