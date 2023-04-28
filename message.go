@@ -45,6 +45,24 @@ type Message interface {
 	Validate() error
 }
 
+// BaseMessage TBD
+type BaseMessage struct{}
+
+// Marshal TBD
+func (m *BaseMessage) Marshal() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+// Unmarshal TBD
+func (m *BaseMessage) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, m)
+}
+
+// Validate TBD
+func (m *BaseMessage) Validate() error {
+	return nil
+}
+
 // AuthMessage TBD
 type AuthMessage struct {
 	Type      MessageType `json:"type,omitempty"`

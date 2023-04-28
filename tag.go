@@ -2,7 +2,6 @@ package nostr
 
 import (
 	"encoding/json"
-	"log"
 )
 
 type TagType string
@@ -46,23 +45,14 @@ type Tag interface {
 	Unmarshal(data []byte) error
 }
 
-type BaseTag []any
+type BaseTag []interface{}
 
-func NewBaseTag(typ TagType, arg ...any) Tag {
-	t := BaseTag([]any{typ})
-	for _, v := range arg {
-		t = append(t, v)
+func NewBaseTag(typ TagType, args ...interface{}) Tag {
+	tag := BaseTag([]interface{}{typ})
+	for _, arg := range args {
+		tag = append(tag, arg)
 	}
-	return t
-}
-
-func (t BaseTag) Get(index int) (any, error) {
-	return t[index], nil
-}
-
-func (t BaseTag) Set(index int, v any) error {
-	t[index] = v
-	return nil
+	return tag
 }
 
 func (t BaseTag) Marshal() ([]byte, error) {
@@ -71,10 +61,6 @@ func (t BaseTag) Marshal() ([]byte, error) {
 
 func (t BaseTag) Type() TagType {
 	return t[0].(TagType)
-}
-
-func (t BaseTag) Values() []any {
-	return t
 }
 
 func (t BaseTag) Unmarshal(data []byte) error {
@@ -87,9 +73,7 @@ func (t BaseTag) Validate() error {
 
 // NewAmountTag creates a new AmountTag with the provided amount.
 func NewAmountTag(amount float64) Tag {
-	return &AmountTag{
-		BaseTag: NewBaseTag(TagTypeAmount, amount).(BaseTag),
-	}
+	return NewBaseTag(TagTypeAmount, amount)
 }
 
 // AmountTag TBD
@@ -99,12 +83,7 @@ type AmountTag struct {
 
 // Amount TBD
 func (t *AmountTag) Amount() float64 {
-	v, err := t.BaseTag.Get(1)
-	if err != nil {
-		panic("asdfasdf")
-	}
-	log.Printf("%v", v)
-	amount, ok := v.(float64)
+	amount, ok := t.BaseTag[1].(float64)
 	if !ok {
 		panic("not ok")
 	}
@@ -118,6 +97,5 @@ func (t *AmountTag) Marshal() ([]byte, error) {
 
 // Unmarshal TBD
 func (t *AmountTag) Unmarshal(data []byte) error {
-	t.BaseTag = NewBaseTag(TagTypeAmount).(BaseTag)
 	return t.BaseTag.Unmarshal(data)
 }
