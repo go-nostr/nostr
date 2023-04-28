@@ -9,7 +9,7 @@ import (
 
 func Test_NewAmountTag(t *testing.T) {
 	type args struct {
-		amount float64
+		amount int
 	}
 	tests := []struct {
 		name   string
@@ -37,7 +37,7 @@ func Test_NewAmountTag(t *testing.T) {
 
 func TestAmountTag_Marshal(t *testing.T) {
 	type fields struct {
-		amount float64
+		amount int
 	}
 	tests := []struct {
 		name   string
@@ -69,7 +69,7 @@ func TestAmountTag_Unmarshal(t *testing.T) {
 		data []byte
 	}
 	type fields struct {
-		amount float64
+		amount int
 	}
 	tests := []struct {
 		name   string

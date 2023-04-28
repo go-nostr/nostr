@@ -4,762 +4,279 @@ import (
 	"encoding/json"
 )
 
-// TagType TBD
-type TagType string
-
 const (
-	TagTypeAmount      TagType = "amount"          // TagTypeAmount represents millisats.
-	TagTypeBadgeDesc   TagType = "description"     // TagTypeBadgeDesc represents a badge description.
-	TagTypeBadgeName   TagType = "name"            // TagTypeBadgeName represents a badge name.
-	TagTypeBolt11      TagType = "bolt11"          // TagTypeBolt11 represents a Bolt11 invoice.
-	TagTypeChallenge   TagType = "challenge"       // TagTypeChallenge represents a challenge string.
-	TagTypeContentWarn TagType = "content-warning" // TagTypeContentWarn represents a content warning reason.
-	TagTypeDelegation  TagType = "delegation"      // TagTypeDelegation represents a delegation with pubkey, conditions, and delegation token.
-	TagTypeEvent       TagType = "a"               // TagTypeEvent represents coordinates to an event relay URL.
-	TagTypeEventID     TagType = "e"               // TagTypeEventID represents an event ID (hex) used in relay URLs and markers.
-	TagTypeExpiration  TagType = "expiration"      // TagTypeExpiration represents a Unix timestamp (string) for expiration.
-	TagTypeGeohash     TagType = "g"               // TagTypeGeohash represents a geohash.
-	TagTypeHashtag     TagType = "t"               // TagTypeHashtag represents a hashtag.
-	TagTypeIdentifier  TagType = "d"               // TagTypeIdentifier represents an identifier.
-	TagTypeIdentity    TagType = "i"               // TagTypeIdentity represents an identity used in proofs.
-	TagTypeImage       TagType = "image"           // TagTypeImage represents an image URL with dimensions in pixels.
-	TagTypeInvDesc     TagType = "description"     // TagTypeInvDesc represents an invoice description.
-	TagTypeLNURL       TagType = "lnurl"           // TagTypeLNURL represents a Bech32 encoded LNURL.
-	TagTypeNonce       TagType = "nonce"           // TagTypeNonce represents a random nonce.
-	TagTypePreimage    TagType = "preimage"        // TagTypePreimage represents a hash of a Bolt11 invoice.
-	TagTypePubkey      TagType = "p"               // TagTypePubkey represents a public key (hex) used in relay URLs.
-	TagTypePublishedAt TagType = "published_at"    // TagTypePublishedAt represents a Unix timestamp (string) for when an item was published.
-	TagTypeReference   TagType = "r"               // TagTypeReference represents a reference (URL, etc).
-	TagTypeRelay       TagType = "relay"           // TagTypeRelay represents a relay URL.
-	TagTypeRelays      TagType = "relays"          // TagTypeRelays represents a list of relays.
-	TagTypeSubject     TagType = "subject"         // TagTypeSubject represents a subject.
-	TagTypeSummary     TagType = "summary"         // TagTypeSummary represents an article summary.
-	TagTypeThumb       TagType = "thumb"           // TagTypeThumb represents a badge thumbnail with dimensions in pixels.
-	TagTypeTitle       TagType = "title"           // TagTypeTitle represents an article title.
-	TagTypeZap         TagType = "zap"             // TagTypeZap represents a profile name with a type of value.
+	TagTypeAmount      = "amount"          // TagTypeAmount represents millisats.
+	TagTypeBadgeDesc   = "description"     // TagTypeBadgeDesc represents a badge description.
+	TagTypeBadgeName   = "name"            // TagTypeBadgeName represents a badge name.
+	TagTypeBolt11      = "bolt11"          // TagTypeBolt11 represents a Bolt11 invoice.
+	TagTypeChallenge   = "challenge"       // TagTypeChallenge represents a challenge string.
+	TagTypeContentWarn = "content-warning" // TagTypeContentWarn represents a content warning reason.
+	TagTypeDelegation  = "delegation"      // TagTypeDelegation represents a delegation with pubkey, conditions, and delegation token.
+	TagTypeEvent       = "a"               // TagTypeEvent represents coordinates to an event relay URL.
+	TagTypeEventID     = "e"               // TagTypeEventID represents an event ID (hex) used in relay URLs and markers.
+	TagTypeExpiration  = "expiration"      // TagTypeExpiration represents a Unix timestamp (string) for expiration.
+	TagTypeGeohash     = "g"               // TagTypeGeohash represents a geohash.
+	TagTypeHashtag     = "t"               // TagTypeHashtag represents a hashtag.
+	TagTypeIdentifier  = "d"               // TagTypeIdentifier represents an identifier.
+	TagTypeIdentity    = "i"               // TagTypeIdentity represents an identity used in proofs.
+	TagTypeImage       = "image"           // TagTypeImage represents an image URL with dimensions in pixels.
+	TagTypeInvDesc     = "description"     // TagTypeInvDesc represents an invoice description.
+	TagTypeLNURL       = "lnurl"           // TagTypeLNURL represents a Bech32 encoded LNURL.
+	TagTypeNonce       = "nonce"           // TagTypeNonce represents a random nonce.
+	TagTypePreimage    = "preimage"        // TagTypePreimage represents a hash of a Bolt11 invoice.
+	TagTypePubkey      = "p"               // TagTypePubkey represents a public key (hex) used in relay URLs.
+	TagTypePublishedAt = "published_at"    // TagTypePublishedAt represents a Unix timestamp (string) for when an item was published.
+	TagTypeReference   = "r"               // TagTypeReference represents a reference (URL, etc).
+	TagTypeRelay       = "relay"           // TagTypeRelay represents a relay URL.
+	TagTypeRelays      = "relays"          // TagTypeRelays represents a list of relays.
+	TagTypeSubject     = "subject"         // TagTypeSubject represents a subject.
+	TagTypeSummary     = "summary"         // TagTypeSummary represents an article summary.
+	TagTypeThumb       = "thumb"           // TagTypeThumb represents a badge thumbnail with dimensions in pixels.
+	TagTypeTitle       = "title"           // TagTypeTitle represents an article title.
+	TagTypeZap         = "zap"             // TagTypeZap represents a profile name with a type of value.
 )
 
-// Tag TBD
 type Tag interface {
 	Marshal() ([]byte, error)
+	Type() *string
 	Unmarshal(data []byte) error
-	Validate() error
 }
 
-// BaseTag TBD
-type BaseTag []interface{}
+// RawTag TBD
+type RawTag []any
 
 // Marshal TBD
-func (t BaseTag) Marshal() ([]byte, error) {
+func (t RawTag) Marshal() ([]byte, error) {
 	return json.Marshal(t)
 }
 
+// Type TBD
+func (t RawTag) Type() *string {
+	if len(t) < 1 {
+		return nil
+	}
+	if typ, ok := t[0].(string); ok {
+		return &typ
+	}
+	return nil
+}
+
 // Unmarshal TBD
-func (t BaseTag) Unmarshal(data []byte) error {
+func (t RawTag) Unmarshal(data []byte) error {
 	return json.Unmarshal(data, &t)
 }
 
-// Validate TBD
-func (t BaseTag) Validate() error {
-	return nil
-}
-
-func NewAmountTag(amount float64) Tag {
-	return &AmountTag{BaseTag{TagTypeAmount, amount}}
+func NewAmountTag(amount int) Tag {
+	return AmountTag{TagTypeAmount, amount}
 }
 
 // AmountTag TBD
-type AmountTag struct {
-	BaseTag
-}
+type AmountTag = RawTag
 
-// Amount TBD
-func (t *AmountTag) Amount() float64 {
-	amount, ok := t.BaseTag[1].(float64)
-	if !ok {
-		panic("not ok")
+func (t AmountTag) Amount() *int {
+	if ok := len(t) != 2; !ok {
+		return nil
 	}
-	return amount
-}
-
-// Marshal TBD
-func (t *AmountTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *AmountTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
+	v, ok := t[1].(float64)
+	if !ok {
+		return nil
+	}
+	amount := int(v)
+	return &amount
 }
 
 func NewBadgeDescTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeBadgeDesc}}
+	return BadgeNameTag{TagTypeBadgeDesc}
 }
 
 // BadgeDescTag TBD
-type BadgeDescTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *BadgeDescTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *BadgeDescTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *BadgeDescTag) Validate() error {
-	return nil
-}
+type BadgeDescTag = RawTag
 
 func NewBadgeNameTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeBadgeName}}
+	return BadgeNameTag{TagTypeBadgeName}
 }
 
 // BadgeNameTag TBD
-type BadgeNameTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *BadgeNameTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *BadgeNameTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *BadgeNameTag) Validate() error {
-	return nil
-}
+type BadgeNameTag = RawTag
 
 func NewBolt11Tag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeBolt11}}
+	return BadgeNameTag{TagTypeBolt11}
 }
 
 // Bolt11Tag TBD
-type Bolt11Tag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *Bolt11Tag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *Bolt11Tag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *Bolt11Tag) Validate() error {
-	return nil
-}
+type Bolt11Tag = RawTag
 
 func NewChallengeTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeChallenge}}
+	return BadgeNameTag{TagTypeChallenge}
 }
 
 // ChallengeTag TBD
-type ChallengeTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ChallengeTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ChallengeTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ChallengeTag) Validate() error {
-	return nil
-}
+type ChallengeTag = RawTag
 
 func NewContentWarnTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeContentWarn}}
+	return BadgeNameTag{TagTypeContentWarn}
 }
 
 // ContentWarnTag TBD
-type ContentWarnTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ContentWarnTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ContentWarnTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ContentWarnTag) Validate() error {
-	return nil
-}
+type ContentWarnTag = RawTag
 
 func NewDelegationTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeDelegation}}
+	return BadgeNameTag{TagTypeDelegation}
 }
 
 // DelegationTag TBD
-type DelegationTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *DelegationTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *DelegationTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *DelegationTag) Validate() error {
-	return nil
-}
+type DelegationTag = RawTag
 
 func NewEventTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeEvent}}
+	return BadgeNameTag{TagTypeEvent}
 }
 
 // EventTag TBD
-type EventTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *EventTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *EventTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *EventTag) Validate() error {
-	return nil
-}
+type EventTag = RawTag
 
 func NewEventIDTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeEventID}}
+	return BadgeNameTag{TagTypeEventID}
 }
 
 // EventIDTag TBD
-type EventIDTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *EventIDTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *EventIDTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *EventIDTag) Validate() error {
-	return nil
-}
+type EventIDTag = RawTag
 
 func NewExpirationTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeExpiration}}
+	return BadgeNameTag{TagTypeExpiration}
 }
 
 // ExpirationTag TBD
-type ExpirationTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ExpirationTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ExpirationTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ExpirationTag) Validate() error {
-	return nil
-}
+type ExpirationTag = RawTag
 
 func NewGeohashTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeGeohash}}
+	return BadgeNameTag{TagTypeGeohash}
 }
 
 // GeohashTag TBD
-type GeohashTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *GeohashTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *GeohashTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *GeohashTag) Validate() error {
-	return nil
-}
+type GeohashTag = RawTag
 
 func NewHashtagTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeHashtag}}
+	return BadgeNameTag{TagTypeHashtag}
 }
 
 // HashtagTag TBD
-type HashtagTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *HashtagTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *HashtagTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *HashtagTag) Validate() error {
-	return nil
-}
+type HashtagTag = RawTag
 
 func NewIdentifierTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeIdentifier}}
+	return BadgeNameTag{TagTypeIdentifier}
 }
 
 // IdentifierTag TBD
-type IdentifierTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *IdentifierTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *IdentifierTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *IdentifierTag) Validate() error {
-	return nil
-}
+type IdentifierTag = RawTag
 
 func NewIdentityTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeIdentity}}
+	return BadgeNameTag{TagTypeIdentity}
 }
 
 // IdentityTag TBD
-type IdentityTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *IdentityTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *IdentityTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *IdentityTag) Validate() error {
-	return nil
-}
+type IdentityTag = RawTag
 
 func NewImageTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeImage}}
+	return BadgeNameTag{TagTypeImage}
 }
 
 // ImageTag TBD
-type ImageTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ImageTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ImageTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ImageTag) Validate() error {
-	return nil
-}
+type ImageTag = RawTag
 
 func NewInvDescTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeInvDesc}}
+	return BadgeNameTag{TagTypeInvDesc}
 }
 
 // InvDescTag TBD
-type InvDescTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *InvDescTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *InvDescTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *InvDescTag) Validate() error {
-	return nil
-}
+type InvDescTag = RawTag
 
 func NewLNURLTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeLNURL}}
+	return BadgeNameTag{TagTypeLNURL}
 }
 
 // LNURLTag TBD
-type LNURLTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *LNURLTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *LNURLTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *LNURLTag) Validate() error {
-	return nil
-}
+type LNURLTag = RawTag
 
 func NewNonceTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeNonce}}
+	return BadgeNameTag{TagTypeNonce}
 }
 
 // NonceTag TBD
-type NonceTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *NonceTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *NonceTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *NonceTag) Validate() error {
-	return nil
-}
+type NonceTag = RawTag
 
 func NewPreimageTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypePreimage}}
+	return BadgeNameTag{TagTypePreimage}
 }
 
 // PreimageTag TBD
-type PreimageTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *PreimageTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *PreimageTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *PreimageTag) Validate() error {
-	return nil
-}
+type PreimageTag = RawTag
 
 func NewPubkeyTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypePubkey}}
+	return BadgeNameTag{TagTypePubkey}
 }
 
 // PubkeyTag TBD
-type PubkeyTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *PubkeyTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *PubkeyTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *PubkeyTag) Validate() error {
-	return nil
-}
+type PubkeyTag = RawTag
 
 func NewPublishedAtTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypePublishedAt}}
+	return BadgeNameTag{TagTypePublishedAt}
 }
 
 // PublishedAtTag TBD
-type PublishedAtTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *PublishedAtTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *PublishedAtTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *PublishedAtTag) Validate() error {
-	return nil
-}
+type PublishedAtTag = RawTag
 
 func NewReferenceTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeReference}}
+	return BadgeNameTag{TagTypeReference}
 }
 
 // ReferenceTag TBD
-type ReferenceTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ReferenceTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ReferenceTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ReferenceTag) Validate() error {
-	return nil
-}
+type ReferenceTag = RawTag
 
 func NewRelayTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeRelay}}
+	return BadgeNameTag{TagTypeRelay}
 }
 
 // RelayTag TBD
-type RelayTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *RelayTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *RelayTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *RelayTag) Validate() error {
-	return nil
-}
+type RelayTag = RawTag
 
 func NewRelaysTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeRelays}}
+	return BadgeNameTag{TagTypeRelays}
 }
 
 // RelaysTag TBD
-type RelaysTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *RelaysTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *RelaysTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *RelaysTag) Validate() error {
-	return nil
-}
+type RelaysTag = RawTag
 
 func NewSubjectTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeSubject}}
+	return BadgeNameTag{TagTypeSubject}
 }
 
 // SubjectTag TBD
-type SubjectTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *SubjectTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *SubjectTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *SubjectTag) Validate() error {
-	return nil
-}
+type SubjectTag = RawTag
 
 func NewSummaryTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeSummary}}
+	return BadgeNameTag{TagTypeSummary}
 }
 
 // SummaryTag TBD
-type SummaryTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *SummaryTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *SummaryTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *SummaryTag) Validate() error {
-	return nil
-}
+type SummaryTag = RawTag
 
 func NewThumbTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeThumb}}
+	return BadgeNameTag{TagTypeThumb}
 }
 
 // ThumbTag TBD
-type ThumbTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ThumbTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ThumbTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ThumbTag) Validate() error {
-	return nil
-}
+type ThumbTag = RawTag
 
 func NewTitleTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeTitle}}
+	return BadgeNameTag{TagTypeTitle}
 }
 
 // TitleTag TBD
-type TitleTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *TitleTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *TitleTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *TitleTag) Validate() error {
-	return nil
-}
+type TitleTag = RawTag
 
 func NewZapTag() Tag {
-	return &BadgeNameTag{BaseTag{TagTypeZap}}
+	return BadgeNameTag{TagTypeZap}
 }
 
 // ZapTag TBD
-type ZapTag struct {
-	BaseTag
-}
-
-// Marshal TBD
-func (t *ZapTag) Marshal() ([]byte, error) {
-	return t.BaseTag.Marshal()
-}
-
-// Unmarshal TBD
-func (t *ZapTag) Unmarshal(data []byte) error {
-	return t.BaseTag.Unmarshal(data)
-}
-
-// Validate TBD
-func (t *ZapTag) Validate() error {
-	return nil
-}
+type ZapTag = RawTag

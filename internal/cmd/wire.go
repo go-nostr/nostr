@@ -37,7 +37,7 @@ func provideClientHandler() http.Handler {
 }
 
 func provideRelayHandler() http.Handler {
-	return nostr.NewRelay()
+	return nostr.NewRelay(nil)
 }
 
 func buildClientServer() *http.Server {
