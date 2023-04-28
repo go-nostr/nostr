@@ -14,7 +14,6 @@ func NewClient() *Client {
 	return &Client{
 		err:   make(chan error),
 		conns: make(map[*websocket.Conn]struct{}),
-		mess:  make(chan []byte),
 	}
 }
 
@@ -22,7 +21,6 @@ func NewClient() *Client {
 type Client struct {
 	conns        map[*websocket.Conn]struct{}
 	err          chan error
-	mess         chan []byte
 	messHandlers map[MessageType]MessageHandler
 	mu           sync.Mutex
 }
@@ -90,42 +88,42 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeAuth].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeCount:
 			var mess CountMessage
 			if err := mess.Unmarshal(data); err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeCount].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEOSE:
 			var mess EOSEMessage
 			if err := mess.Unmarshal(data); err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeEOSE].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEvent:
 			var mess EventMessage
 			if err := mess.Unmarshal(data); err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeEvent].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeNotice:
 			var mess NoticeMessage
 			if err := mess.Unmarshal(data); err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeNotice].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		case MessageTypeOk:
 			var mess OkMessage
 			if err := mess.Unmarshal(data); err != nil {
 				cl.err <- err
 				return
 			}
-			go cl.messHandlers[MessageTypeOk].Handle(&mess)
+			go cl.messHandlers[typ].Handle(&mess)
 		}
 	}
 }
