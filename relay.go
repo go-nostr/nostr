@@ -131,56 +131,56 @@ func (rl *Relay) listenConn(c *websocket.Conn) {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeAuth].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeClose:
 			var mess CloseMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeClose].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeCount:
 			var mess CountMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeCount].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEOSE:
 			var mess EOSEMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeEOSE].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeEvent:
 			var mess EventMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeEvent].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeNotice:
 			var mess NoticeMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeNotice].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeOk:
 			var mess OkMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeOk].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		case MessageTypeRequest:
 			var mess RequestMessage
 			if err := mess.Unmarshal(data); err != nil {
 				rl.err <- err
 				return
 			}
-			go rl.messHandlers[MessageTypeRequest].Handle(&mess)
+			go rl.messHandlers[typ].Handle(&mess)
 		}
 	}
 }

@@ -64,6 +64,9 @@ func (t BaseTag) Marshal() ([]byte, error) {
 
 // Type TBD
 func (t BaseTag) Type() TagType {
+	if len(t) < 1 {
+		panic("not ok")
+	}
 	return t[0].(TagType)
 }
 
@@ -78,7 +81,7 @@ func (t BaseTag) Validate() error {
 }
 
 func NewAmountTag(amount float64) Tag {
-	return NewBaseTag(TagTypeAmount, amount)
+	return &AmountTag{BaseTag{TagTypeAmount, amount}}
 }
 
 // AmountTag TBD
@@ -106,7 +109,7 @@ func (t *AmountTag) Unmarshal(data []byte) error {
 }
 
 func NewBadgeDescTag() Tag {
-	return NewBaseTag(TagTypeBadgeDesc)
+	return &BadgeNameTag{BaseTag{TagTypeBadgeDesc}}
 }
 
 // BadgeDescTag TBD
@@ -130,7 +133,7 @@ func (t *BadgeDescTag) Validate() error {
 }
 
 func NewBadgeNameTag() Tag {
-	return NewBaseTag(TagTypeBadgeName)
+	return &BadgeNameTag{BaseTag{TagTypeBadgeName}}
 }
 
 // BadgeNameTag TBD
@@ -154,7 +157,7 @@ func (t *BadgeNameTag) Validate() error {
 }
 
 func NewBolt11Tag() Tag {
-	return NewBaseTag(TagTypeBolt11)
+	return &BadgeNameTag{BaseTag{TagTypeBolt11}}
 }
 
 // Bolt11Tag TBD
@@ -178,7 +181,7 @@ func (t *Bolt11Tag) Validate() error {
 }
 
 func NewChallengeTag() Tag {
-	return NewBaseTag(TagTypeChallenge)
+	return &BadgeNameTag{BaseTag{TagTypeChallenge}}
 }
 
 // ChallengeTag TBD
@@ -202,7 +205,7 @@ func (t *ChallengeTag) Validate() error {
 }
 
 func NewContentWarnTag() Tag {
-	return NewBaseTag(TagTypeContentWarn)
+	return &BadgeNameTag{BaseTag{TagTypeContentWarn}}
 }
 
 // ContentWarnTag TBD
@@ -226,7 +229,7 @@ func (t *ContentWarnTag) Validate() error {
 }
 
 func NewDelegationTag() Tag {
-	return NewBaseTag(TagTypeDelegation)
+	return &BadgeNameTag{BaseTag{TagTypeDelegation}}
 }
 
 // DelegationTag TBD
@@ -250,7 +253,7 @@ func (t *DelegationTag) Validate() error {
 }
 
 func NewEventTag() Tag {
-	return NewBaseTag(TagTypeEvent)
+	return &BadgeNameTag{BaseTag{TagTypeEvent}}
 }
 
 // EventTag TBD
@@ -274,7 +277,7 @@ func (t *EventTag) Validate() error {
 }
 
 func NewEventIDTag() Tag {
-	return NewBaseTag(TagTypeEventID)
+	return &BadgeNameTag{BaseTag{TagTypeEventID}}
 }
 
 // EventIDTag TBD
@@ -298,7 +301,7 @@ func (t *EventIDTag) Validate() error {
 }
 
 func NewExpirationTag() Tag {
-	return NewBaseTag(TagTypeExpiration)
+	return &BadgeNameTag{BaseTag{TagTypeExpiration}}
 }
 
 // ExpirationTag TBD
@@ -322,7 +325,7 @@ func (t *ExpirationTag) Validate() error {
 }
 
 func NewGeohashTag() Tag {
-	return NewBaseTag(TagTypeGeohash)
+	return &BadgeNameTag{BaseTag{TagTypeGeohash}}
 }
 
 // GeohashTag TBD
@@ -346,7 +349,7 @@ func (t *GeohashTag) Validate() error {
 }
 
 func NewHashtagTag() Tag {
-	return NewBaseTag(TagTypeHashtag)
+	return &BadgeNameTag{BaseTag{TagTypeHashtag}}
 }
 
 // HashtagTag TBD
@@ -370,7 +373,7 @@ func (t *HashtagTag) Validate() error {
 }
 
 func NewIdentifierTag() Tag {
-	return NewBaseTag(TagTypeIdentifier)
+	return &BadgeNameTag{BaseTag{TagTypeIdentifier}}
 }
 
 // IdentifierTag TBD
@@ -394,7 +397,7 @@ func (t *IdentifierTag) Validate() error {
 }
 
 func NewIdentityTag() Tag {
-	return NewBaseTag(TagTypeIdentity)
+	return &BadgeNameTag{BaseTag{TagTypeIdentity}}
 }
 
 // IdentityTag TBD
@@ -418,7 +421,7 @@ func (t *IdentityTag) Validate() error {
 }
 
 func NewImageTag() Tag {
-	return NewBaseTag(TagTypeImage)
+	return &BadgeNameTag{BaseTag{TagTypeImage}}
 }
 
 // ImageTag TBD
@@ -442,7 +445,7 @@ func (t *ImageTag) Validate() error {
 }
 
 func NewInvDescTag() Tag {
-	return NewBaseTag(TagTypeInvDesc)
+	return &BadgeNameTag{BaseTag{TagTypeInvDesc}}
 }
 
 // InvDescTag TBD
@@ -466,7 +469,7 @@ func (t *InvDescTag) Validate() error {
 }
 
 func NewLNURLTag() Tag {
-	return NewBaseTag(TagTypeLNURL)
+	return &BadgeNameTag{BaseTag{TagTypeLNURL}}
 }
 
 // LNURLTag TBD
@@ -490,7 +493,7 @@ func (t *LNURLTag) Validate() error {
 }
 
 func NewNonceTag() Tag {
-	return NewBaseTag(TagTypeNonce)
+	return &BadgeNameTag{BaseTag{TagTypeNonce}}
 }
 
 // NonceTag TBD
@@ -514,7 +517,7 @@ func (t *NonceTag) Validate() error {
 }
 
 func NewPreimageTag() Tag {
-	return NewBaseTag(TagTypePreimage)
+	return &BadgeNameTag{BaseTag{TagTypePreimage}}
 }
 
 // PreimageTag TBD
@@ -538,7 +541,7 @@ func (t *PreimageTag) Validate() error {
 }
 
 func NewPubkeyTag() Tag {
-	return NewBaseTag(TagTypePubkey)
+	return &BadgeNameTag{BaseTag{TagTypePubkey}}
 }
 
 // PubkeyTag TBD
@@ -562,7 +565,7 @@ func (t *PubkeyTag) Validate() error {
 }
 
 func NewPublishedAtTag() Tag {
-	return NewBaseTag(TagTypePublishedAt)
+	return &BadgeNameTag{BaseTag{TagTypePublishedAt}}
 }
 
 // PublishedAtTag TBD
@@ -586,7 +589,7 @@ func (t *PublishedAtTag) Validate() error {
 }
 
 func NewReferenceTag() Tag {
-	return NewBaseTag(TagTypeReference)
+	return &BadgeNameTag{BaseTag{TagTypeReference}}
 }
 
 // ReferenceTag TBD
@@ -610,7 +613,7 @@ func (t *ReferenceTag) Validate() error {
 }
 
 func NewRelayTag() Tag {
-	return NewBaseTag(TagTypeRelay)
+	return &BadgeNameTag{BaseTag{TagTypeRelay}}
 }
 
 // RelayTag TBD
@@ -634,7 +637,7 @@ func (t *RelayTag) Validate() error {
 }
 
 func NewRelaysTag() Tag {
-	return NewBaseTag(TagTypeRelays)
+	return &BadgeNameTag{BaseTag{TagTypeRelays}}
 }
 
 // RelaysTag TBD
@@ -658,7 +661,7 @@ func (t *RelaysTag) Validate() error {
 }
 
 func NewSubjectTag() Tag {
-	return NewBaseTag(TagTypeSubject)
+	return &BadgeNameTag{BaseTag{TagTypeSubject}}
 }
 
 // SubjectTag TBD
@@ -682,7 +685,7 @@ func (t *SubjectTag) Validate() error {
 }
 
 func NewSummaryTag() Tag {
-	return NewBaseTag(TagTypeSummary)
+	return &BadgeNameTag{BaseTag{TagTypeSummary}}
 }
 
 // SummaryTag TBD
@@ -706,7 +709,7 @@ func (t *SummaryTag) Validate() error {
 }
 
 func NewThumbTag() Tag {
-	return NewBaseTag(TagTypeThumb)
+	return &BadgeNameTag{BaseTag{TagTypeThumb}}
 }
 
 // ThumbTag TBD
@@ -730,7 +733,7 @@ func (t *ThumbTag) Validate() error {
 }
 
 func NewTitleTag() Tag {
-	return NewBaseTag(TagTypeTitle)
+	return &BadgeNameTag{BaseTag{TagTypeTitle}}
 }
 
 // TitleTag TBD
@@ -754,7 +757,7 @@ func (t *TitleTag) Validate() error {
 }
 
 func NewZapTag() Tag {
-	return NewBaseTag(TagTypeZap)
+	return &BadgeNameTag{BaseTag{TagTypeZap}}
 }
 
 // ZapTag TBD
