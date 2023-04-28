@@ -24,15 +24,11 @@ func Test_NewAmountTag(t *testing.T) {
 			expect: &nostr.AmountTag{},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tag := nostr.NewAmountTag(tt.args.amount)
-			if tag.Type() != nostr.TagTypeAmount {
-				t.Errorf("incorrect tag type")
-			}
-			if tag.(*nostr.AmountTag).Amount() != tt.args.amount {
-				t.Errorf("incorrect amount")
+			if reflect.DeepEqual(tt.expect, tag) {
+				t.Fatalf("expected %v, got %v", tt.expect, tag)
 			}
 			t.Logf("%+v", tag)
 		})
@@ -43,7 +39,6 @@ func TestAmountTag_Marshal(t *testing.T) {
 	type fields struct {
 		amount float64
 	}
-
 	tests := []struct {
 		name   string
 		fields fields
@@ -57,16 +52,13 @@ func TestAmountTag_Marshal(t *testing.T) {
 			expect: []byte{},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			amountTag := nostr.NewAmountTag(tt.fields.amount)
-
 			data, err := amountTag.Marshal()
 			if err != nil {
 				t.Errorf("%+v", err)
 			}
-
 			t.Logf("%+v", data)
 		})
 	}
@@ -95,7 +87,6 @@ func TestAmountTag_Unmarshal(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			amountTag := &nostr.AmountTag{}

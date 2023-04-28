@@ -42,16 +42,8 @@ const (
 // Tag TBD
 type Tag interface {
 	Marshal() ([]byte, error)
-	Type() TagType
 	Unmarshal(data []byte) error
-}
-
-func NewBaseTag(typ TagType, args ...interface{}) Tag {
-	tag := BaseTag([]interface{}{typ})
-	for _, arg := range args {
-		tag = append(tag, arg)
-	}
-	return tag
+	Validate() error
 }
 
 // BaseTag TBD
@@ -60,14 +52,6 @@ type BaseTag []interface{}
 // Marshal TBD
 func (t BaseTag) Marshal() ([]byte, error) {
 	return json.Marshal(t)
-}
-
-// Type TBD
-func (t BaseTag) Type() TagType {
-	if len(t) < 1 {
-		panic("not ok")
-	}
-	return t[0].(TagType)
 }
 
 // Unmarshal TBD

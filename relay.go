@@ -33,7 +33,7 @@ type Relay struct {
 	Description   string       `json:"description,omitempty"`
 	PubKey        string       `json:"pub_key,omitempty"`
 	Contact       string       `json:"contact,omitempty"`
-	SupportedNIPs []string     `json:"supported_nips,omitempty"`
+	SupportedNIPs []NIP        `json:"supported_nips,omitempty"`
 	Software      string       `json:"software,omitempty"`
 	Version       string       `json:"version,omitempty"`
 	Limitations   *Limitations `json:"limitations,omitempty"`
