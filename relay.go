@@ -128,10 +128,10 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
 			return
 		}
-		if rl.messHandlers[*mess.Type()] == nil {
+		if rl.messHandlers[string(mess.Type())] == nil {
 			return
 		}
-		go rl.messHandlers[*mess.Type()].Handle(mess)
+		go rl.messHandlers[string(mess.Type())].Handle(mess)
 	}
 }
 

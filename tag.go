@@ -38,7 +38,7 @@ const (
 
 type Tag interface {
 	Marshal() ([]byte, error)
-	Type() *string
+	Type() []byte
 	Unmarshal(data []byte) error
 }
 
@@ -51,12 +51,12 @@ func (t RawTag) Marshal() ([]byte, error) {
 }
 
 // Type TBD
-func (t RawTag) Type() *string {
+func (t RawTag) Type() []byte {
 	if len(t) < 1 {
 		return nil
 	}
 	if typ, ok := t[0].(string); ok {
-		return &typ
+		return []byte(typ)
 	}
 	return nil
 }
