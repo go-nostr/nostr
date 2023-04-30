@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"strings"
-
-	"github.com/go-nostr/nostr"
+	"os"
 )
 
 const (
@@ -14,71 +11,113 @@ const (
 	CommandTypePublish = "publish"
 )
 
-type relaySlice []string
+var ()
 
-func (rs *relaySlice) String() string {
-	return strings.Join(*rs, ",")
+func init() {
 }
 
-func (rs *relaySlice) Set(u string) error {
-	*rs = append(*rs, u)
+// nostr [subcommand] [options]
+//
+// where, subcommand∈{auth,close,count,event,req}
+
+func main() {
+
+	if len(os.Args[1:]) < 1 {
+		flag.Usage = func() {
+			fmt.Printf(
+				"go-nostr: manage and communicate with Nostr protocol for decentralized social media." +
+					"\n\n" +
+					"Usage:" +
+					"\n\n" +
+					"\tnostr [command] [options]" +
+					"\n\n" +
+					"The commands are:" +
+					"\n\n" +
+					"\tauth\n" +
+					"\tclose\n" +
+					"\tcount\n" +
+					"\tevent\n" +
+					"\treq\n\n",
+			)
+		}
+		flag.Usage()
+		return
+	}
+
+	if err := os.Args[1:]; err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	cmds := []Command{
+		&AuthCommand{},
+	}
+
+	subcommand := os.Args[1]
+
+	for _, cmd := range cmds {
+		if cmd.Name() != subcommand {
+			fmt.Println(fmt.Errorf("unknown subcommand: %s", subcommand))
+			return
+		}
+		cmd.Init(os.Args[2:])
+		cmd.Run()
+	}
+}
+
+type Command interface {
+	Name() string
+	Init(args []string) error
+	Run() error
+}
+
+type BaseCommand struct {
+	fs *flag.FlagSet
+}
+
+func (c *BaseCommand) Name() string {
+	return c.fs.Name()
+}
+
+func (c *BaseCommand) Init(args []string) error {
+	return c.fs.Parse(args)
+}
+
+func (c *BaseCommand) Run() error {
+	fmt.Printf("hello!")
 	return nil
 }
 
-var (
-	data   string     = "[]"
-	relays relaySlice = make(relaySlice, 0)
-)
-
-func init() {
-	flag.StringVar(&data, "d", data, "")
-	flag.Var(&relays, "r", "")
+func NewAuthCommand() Command {
+	ac := &AuthCommand{&BaseCommand{
+		fs: flag.NewFlagSet("auth", flag.ContinueOnError),
+	}}
+	return ac
 }
 
-func main() {
-	flag.Parse()
+type AuthCommand struct {
+	*BaseCommand
+}
 
-	ch := make(chan nostr.Message)
-	cl := nostr.NewClient(nil)
+func NewCloseCommand() Command {
+	ac := &CloseCommand{&BaseCommand{
+		fs: flag.NewFlagSet("close", flag.ContinueOnError),
+	}}
+	return ac
+}
 
-	cl.HandleMessageFunc(nostr.MessageTypeEOSE, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeRequest, func(mess nostr.Message) {
-		ch <- mess
-	})
+type CloseCommand struct {
+	*BaseCommand
+}
 
-	ctx := context.Background()
+type CountCommand struct {
+	*BaseCommand
+}
 
-	for _, u := range relays {
-		fmt.Printf("Connecting... (%s)", u)
-		if err := cl.Subscribe(ctx, u); err != nil {
-			panic(err)
-		}
-	}
+type EventCommand struct {
+	*BaseCommand
+}
 
-	fmt.Printf(" Connected!\n")
-
-	mess := nostr.NewRequestMessage("asdf-1234", &nostr.Filter{})
-	byt, _ := mess.Marshal()
-	fmt.Printf("%s", byt)
-	go cl.Publish(mess)
-
-	for {
-		select {
-		case mess := <-ch:
-			if string(mess.Type()) == nostr.MessageTypeEvent {
-				eventMess := &nostr.EventMessage{RawMessage: mess.(*nostr.RawMessage)}
-				fmt.Printf("\nFrom: %s\n\n%s\n\n\n", eventMess.Event().PublicKey(), eventMess.Event().Content())
-			}
-		case <-ctx.Done():
-			return
-		}
-	}
+type RequestCommand struct {
+	*BaseCommand
 }
