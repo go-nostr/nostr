@@ -7,96 +7,155 @@ import (
 	"github.com/go-nostr/nostr"
 )
 
-func Test_NewAmountTag(t *testing.T) {
-	type args struct {
-		amount int
+func Test_NewRawTag(t *testing.T) {
+	tests := []struct {
+		name   string
+		expect nostr.Tag
+	}{
+		{
+			name:   "MUST create a new RawTag with given type",
+			expect: &nostr.RawTag{[]byte("\"type\"")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mess := nostr.NewRawTag("type")
+			if !reflect.DeepEqual(mess, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, mess)
+			}
+			t.Logf("got %+v", mess)
+		})
+	}
+}
+
+func TestRawTag_Marshal(t *testing.T) {
+	type args struct{}
+	type fields struct {
+		mess nostr.Tag
 	}
 	tests := []struct {
 		name   string
 		args   args
-		expect *nostr.AmountTag
+		fields fields
+		expect []byte
+		err    error
 	}{
 		{
-			name: "SHOULD create new AmountTag",
-			args: args{
-				amount: 42,
+			name: "MUST create a new RawTag with given type",
+			args: args{},
+			fields: fields{
+				mess: nostr.NewRawTag("type"),
 			},
-			expect: &nostr.AmountTag{},
+			expect: []byte("[\"type\"]"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tag := nostr.NewAmountTag(tt.args.amount)
-			if reflect.DeepEqual(tt.expect, tag) {
-				t.Fatalf("expected %v, got %v", tt.expect, tag)
+			mess, err := tt.fields.mess.Marshal()
+			if err != nil && tt.err == nil {
+				t.Fatalf("expected error %v, got error %v", tt.err, err)
 			}
-			t.Logf("%+v", tag)
+			if !reflect.DeepEqual(mess, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, mess)
+			}
+			t.Logf("got %+v", mess)
 		})
 	}
 }
 
-func TestAmountTag_Marshal(t *testing.T) {
+func TestRawTag_Type(t *testing.T) {
 	type fields struct {
-		amount int
+		mess nostr.Tag
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		expect []byte
+		expect string
+		err    error
 	}{
 		{
-			name: "SHOULD marshal AmountTag",
+			name: "MUST get type for raw message",
 			fields: fields{
-				amount: 42,
+				mess: nostr.NewRawTag("type"),
 			},
-			expect: []byte{},
+			expect: "type",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			amountTag := nostr.NewAmountTag(tt.fields.amount)
-			data, err := amountTag.Marshal()
-			if err != nil {
-				t.Errorf("%+v", err)
+			typ := tt.fields.mess.Type()
+			if !reflect.DeepEqual(typ, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
 			}
-			t.Logf("%+v", data)
+			t.Logf("got %+v", tt.fields.mess)
 		})
 	}
 }
 
-func TestAmountTag_Unmarshal(t *testing.T) {
+func TestRawTag_Unmarshal(t *testing.T) {
 	type args struct {
 		data []byte
 	}
 	type fields struct {
-		amount int
+		mess nostr.Tag
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect *nostr.AmountTag
+		expect nostr.Tag
+		err    error
 	}{
 		{
-			name: "SHOULD unmarshal AmountTag",
+			name: "MUST unmarshal RawTag",
 			args: args{
-				data: []byte("[\"amount\",42]"),
+				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				amount: 100,
+				mess: &nostr.RawTag{},
 			},
+			expect: nostr.NewRawTag("type"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			amountTag := &nostr.AmountTag{}
-			err := amountTag.Unmarshal(tt.args.data)
-			if err != nil {
-				t.Errorf("%+v", err)
+			err := tt.fields.mess.Unmarshal(tt.args.data)
+			if err != nil && tt.err == nil {
+				t.Fatalf("expected error %v, got error %v", tt.err, err)
 			}
-			if reflect.DeepEqual(amountTag, tt.expect) {
-				t.Errorf("expected %+v, got %+v", amountTag, tt.expect)
+			if !reflect.DeepEqual(tt.fields.mess, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
 			}
+			t.Logf("got %+v", tt.fields.mess)
+		})
+	}
+}
+
+func TestRawTag_Values(t *testing.T) {
+	type fields struct {
+		mess nostr.Tag
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		expect []any
+		err    error
+	}{
+		{
+			name: "MUST get type for raw message",
+			fields: fields{
+				mess: nostr.NewRawTag("type"),
+			},
+			expect: []any{"type"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := tt.fields.mess.Values()
+			if !reflect.DeepEqual(v, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
+			}
+			t.Logf("got %+v", tt.fields.mess)
 		})
 	}
 }

@@ -38,96 +38,120 @@ const (
 )
 
 type Event interface {
-	ID() []byte
 	Content() []byte
-	Kind() *int
+	Get(key string) any
+	ID() []byte
+	Keys() []string
+	Kind() int
 	Marshal() ([]byte, error)
 	PublicKey() []byte
-	Get(k string) any
-	Set(k string, v any) error
+	Set(key string, val any) error
 	Sign() error
 	Signature() []byte
 	Tags() []Tag
 	Unmarshal(data []byte) error
+	Values() []any
+}
+
+func NewRawEvent() Event {
+	return &RawEvent{}
 }
 
 // RawEvent TBD
 type RawEvent map[string]json.RawMessage
 
 // Content TBD
-func (e RawEvent) Content() []byte {
+func (e *RawEvent) Content() []byte {
 	var content string
-	if err := json.Unmarshal(e["content"], &content); err != nil {
-		return nil
+	if err := json.Unmarshal((*e)["content"], &content); err != nil {
+		return []byte{}
 	}
 	return []byte(content)
 }
 
 // Get TBD
-func (e RawEvent) Get(k string) any {
-	var v any
-	if err := json.Unmarshal(e[k], &v); err != nil {
+func (e *RawEvent) Get(key string) any {
+	var val any
+	if err := json.Unmarshal((*e)[key], &val); err != nil {
 		return nil
 	}
-	return v
+	return val
 }
 
 // ID TBD
-func (e RawEvent) ID() []byte {
+func (e *RawEvent) ID() []byte {
 	var id string
-	if err := json.Unmarshal(e["id"], &id); err != nil {
-		return nil
+	if err := json.Unmarshal((*e)["id"], &id); err != nil {
+		return []byte{}
 	}
 	return []byte(id)
 }
 
-// Kind TBD
-func (e RawEvent) Kind() *int {
-	var kind int
-	if err := json.Unmarshal(e["kind"], &kind); err != nil {
-		return nil
+// Keys TBD
+func (e *RawEvent) Keys() []string {
+	var keys []string
+	for key := range *e {
+		keys = append(keys, key)
 	}
-	return &kind
+	return keys
+}
+
+// Kind TBD
+func (e *RawEvent) Kind() int {
+	var kind int
+	if err := json.Unmarshal((*e)["kind"], &kind); err != nil {
+		return -1
+	}
+	return kind
 }
 
 // PublicKey TBD
-func (e RawEvent) PublicKey() []byte {
-	var publicKey string
-	if err := json.Unmarshal(e["pubkey"], &publicKey); err != nil {
-		return nil
+func (e *RawEvent) PublicKey() []byte {
+	var pubKey string
+	if err := json.Unmarshal((*e)["pubkey"], &pubKey); err != nil {
+		return []byte{}
 	}
-	return []byte(publicKey)
+	return []byte(pubKey)
 }
 
 // Set TBD
-func (e RawEvent) Set(k string, v any) error {
-	data, err := json.Marshal(v)
+func (e *RawEvent) Set(key string, val any) error {
+	data, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
-	e[k] = data
+	(*e)[key] = data
 	return nil
 }
 
 // Signature TBD
-func (e RawEvent) Signature() []byte {
-	var signature []byte
-	if err := json.Unmarshal(e["pubkey"], &signature); err != nil {
-		return nil
+func (e *RawEvent) Signature() []byte {
+	var sig string
+	if err := json.Unmarshal((*e)["sig"], &sig); err != nil {
+		return []byte{}
 	}
-	return signature
+	return []byte(sig)
 }
 
 // Sign TBD
-func (e RawEvent) Sign() error {
+func (e *RawEvent) Sign() error {
+	// TODO
 	return nil
 }
 
 // Tags TBD
-func (e RawEvent) Tags() []Tag {
-	var tags []Tag
-	if err := json.Unmarshal(e["tags"], &tags); err != nil {
-		return nil
+func (e *RawEvent) Tags() []Tag {
+	tags := make([]Tag, 0)
+	var args []json.RawMessage
+	if err := json.Unmarshal((*e)["tags"], &args); err != nil {
+		return tags
+	}
+	for _, arg := range args {
+		var tag RawTag
+		if err := tag.Unmarshal(arg); err != nil {
+			return tags
+		}
+		tags = append(tags, &tag)
 	}
 	return tags
 }
@@ -147,282 +171,351 @@ func (e *RawEvent) Validate() error {
 	return nil
 }
 
+// Values TBD
+func (e *RawEvent) Values() []any {
+	var vals []any
+	for _, v := range *e {
+		vals = append(vals, v)
+	}
+	return vals
+}
+
 // NewMetadataEvent TBD
 func NewMetadataEvent() Event {
-	e := &MetadataEvent{}
-	e.Set("kind", EventKindMetadata)
-	return e
+	event := &MetadataEvent{}
+	event.Set("kind", EventKindMetadata)
+	return event
 }
 
 // MetadataEvent TBD
-type MetadataEvent = RawEvent
+type MetadataEvent struct {
+	*RawEvent
+}
 
 // NewShortTextNoteEvent TBD
 func NewShortTextNoteEvent() Event {
-	e := &ShortTextNoteEvent{}
-	e.Set("kind", EventKindShortTextNote)
-	return e
+	event := &ShortTextNoteEvent{}
+	event.Set("kind", EventKindShortTextNote)
+	return event
 }
 
 // ShortTextNoteEvent TBD
-type ShortTextNoteEvent = RawEvent
+type ShortTextNoteEvent struct {
+	*RawEvent
+}
 
 // NewRecommendRelayEvent TBD
 func NewRecommendRelayEvent() Event {
-	e := &RecommendRelayEvent{}
-	e.Set("kind", EventKindRecommendRelay)
-	return e
+	event := &RecommendRelayEvent{}
+	event.Set("kind", EventKindRecommendRelay)
+	return event
 }
 
 // RecommendRelayEvent TBD
-type RecommendRelayEvent = RawEvent
+type RecommendRelayEvent struct {
+	*RawEvent
+}
 
 // NewContactsEvent TBD
 func NewContactsEvent() Event {
-	e := &ContactsEvent{}
-	e.Set("kind", EventKindContacts)
-	return e
+	event := &ContactsEvent{}
+	event.Set("kind", EventKindContacts)
+	return event
 }
 
 // ContactsEvent TBD
-type ContactsEvent = RawEvent
+type ContactsEvent struct {
+	*RawEvent
+}
 
 // NewEncryptedDirectMessagesEvent TBD
 func NewEncryptedDirectMessagesEvent() Event {
-	e := &EncryptedDirectMessagesEvent{}
-	e.Set("kind", EventKindEncryptedDirectMessages)
-	return e
+	event := &EncryptedDirectMessagesEvent{}
+	event.Set("kind", EventKindEncryptedDirectMessages)
+	return event
 }
 
 // EncryptedDirectMessagesEvent TBD
-type EncryptedDirectMessagesEvent = RawEvent
+type EncryptedDirectMessagesEvent struct {
+	*RawEvent
+}
 
 // NewEventDeletionEvent TBD
 func NewEventDeletionEvent() Event {
-	e := &EventDeletionEvent{}
-	e.Set("kind", EventKindEventDeletion)
-	return e
+	event := &EventDeletionEvent{}
+	event.Set("kind", EventKindEventDeletion)
+	return event
 }
 
 // EventDeletionEvent TBD
-type EventDeletionEvent = RawEvent
+type EventDeletionEvent struct {
+	*RawEvent
+}
 
 // NewEventRepostsEvent TBD
 func NewEventRepostsEvent() Event {
-	e := &EventRepostsEvent{}
-	e.Set("kind", EventKindReposts)
-	return e
+	event := &EventRepostsEvent{}
+	event.Set("kind", EventKindReposts)
+	return event
 }
 
 // EventRepostsEvent TBD
-type EventRepostsEvent = RawEvent
+type EventRepostsEvent struct {
+	*RawEvent
+}
 
 // NewReactionEvent TBD
 func NewReactionEvent() Event {
-	e := &ReactionEvent{}
-	e.Set("kind", EventKindReaction)
-	return e
+	event := &ReactionEvent{}
+	event.Set("kind", EventKindReaction)
+	return event
 }
 
 // ReactionEvent TBD
-type ReactionEvent = RawEvent
+type ReactionEvent struct {
+	*RawEvent
+}
 
 // NewBadgeAwardEvent TBD
 func NewBadgeAwardEvent() Event {
-	e := &BadgeAwardEvent{}
-	e.Set("kind", EventKindBadgeAward)
-	return e
+	event := &BadgeAwardEvent{}
+	event.Set("kind", EventKindBadgeAward)
+	return event
 }
 
 // BadgeAwardEvent TBD
-type BadgeAwardEvent = RawEvent
+type BadgeAwardEvent struct {
+	*RawEvent
+}
 
 // NewChannelCreationEvent TBD
 func NewChannelCreationEvent() Event {
-	e := &ChannelCreationEvent{}
-	e.Set("kind", EventKindChannelCreation)
-	return e
+	event := &ChannelCreationEvent{}
+	event.Set("kind", EventKindChannelCreation)
+	return event
 }
 
 // ChannelCreationEvent TBD
-type ChannelCreationEvent = RawEvent
+type ChannelCreationEvent struct {
+	*RawEvent
+}
 
 func NewChannelMetadataEvent() Event {
-	e := &ChannelMetadataEvent{}
-	e.Set("kind", EventKindChannelMetadata)
-	return e
+	event := &ChannelMetadataEvent{}
+	event.Set("kind", EventKindChannelMetadata)
+	return event
 }
 
 // ChannelMetadata TBD
-type ChannelMetadataEvent = RawEvent
+type ChannelMetadataEvent struct {
+	*RawEvent
+}
 
 func NewChannelMessageEvent() Event {
-	e := &ChannelMessageEvent{}
-	e.Set("kind", EventKindChannelMessage)
-	return e
+	event := &ChannelMessageEvent{}
+	event.Set("kind", EventKindChannelMessage)
+	return event
 }
 
 // ChannelMessage TBD
-type ChannelMessageEvent = RawEvent
+type ChannelMessageEvent struct {
+	*RawEvent
+}
 
 func NewChannelHideMessageEvent() Event {
-	e := &ChannelHideMessageEvent{}
-	e.Set("kind", EventKindChannelHideMessage)
-	return e
+	event := &ChannelHideMessageEvent{}
+	event.Set("kind", EventKindChannelHideMessage)
+	return event
 }
 
 // ChannelHideMessage TBD
-type ChannelHideMessageEvent = RawEvent
+type ChannelHideMessageEvent struct {
+	*RawEvent
+}
 
 func NewChannelMuteUserEvent() Event {
-	e := &ChannelMuteUserEvent{}
-	e.Set("kind", EventKindChannelMuteUser)
-	return e
+	event := &ChannelMuteUserEvent{}
+	event.Set("kind", EventKindChannelMuteUser)
+	return event
 }
 
 // ChannelMuteUser TBD
-type ChannelMuteUserEvent = RawEvent
+type ChannelMuteUserEvent struct {
+	*RawEvent
+}
 
 func NewReportingEvent() Event {
-	e := &ReportingEvent{}
-	e.Set("kind", EventKindReporting)
-	return e
+	event := &ReportingEvent{}
+	event.Set("kind", EventKindReporting)
+	return event
 }
 
 // Reporting TBD
-type ReportingEvent = RawEvent
+type ReportingEvent struct {
+	*RawEvent
+}
 
 func NewZapRequestEvent() Event {
-	e := &ZapRequestEvent{}
-	e.Set("kind", EventKindZapRequest)
-	return e
+	event := &ZapRequestEvent{}
+	event.Set("kind", EventKindZapRequest)
+	return event
 }
 
 // ZapRequest TBD
-type ZapRequestEvent = RawEvent
+type ZapRequestEvent struct {
+	*RawEvent
+}
 
 func NewZapEvent() Event {
-	e := &ZapEvent{}
-	e.Set("kind", EventKindZap)
-	return e
+	event := &ZapEvent{}
+	event.Set("kind", EventKindZap)
+	return event
 }
 
 // Zap TBD
-type ZapEvent = RawEvent
+type ZapEvent struct {
+	*RawEvent
+}
 
 func NewMuteListEvent() Event {
-	e := &MuteListEvent{}
-	e.Set("kind", EventKindMuteList)
-	return e
+	event := &MuteListEvent{}
+	event.Set("kind", EventKindMuteList)
+	return event
 }
 
 // MuteList TBD
-type MuteListEvent = RawEvent
+type MuteListEvent struct {
+	*RawEvent
+}
 
 func NewPinListEvent() Event {
-	e := &PinListEvent{}
-	e.Set("kind", EventKindPinList)
-	return e
+	event := &PinListEvent{}
+	event.Set("kind", EventKindPinList)
+	return event
 }
 
 // PinList TBD
-type PinListEvent = RawEvent
+type PinListEvent struct {
+	*RawEvent
+}
 
 func NewRelayListMetadataEvent() Event {
-	e := &RelayListMetadataEvent{}
-	e.Set("kind", EventKindRelayListMetadata)
-	return e
+	event := &RelayListMetadataEvent{}
+	event.Set("kind", EventKindRelayListMetadata)
+	return event
 }
 
 // RelayListMetadata TBD
-type RelayListMetadataEvent = RawEvent
+type RelayListMetadataEvent struct {
+	*RawEvent
+}
 
 func NewClientAuthenticationEvent() Event {
-	e := &ClientAuthenticationEvent{}
-	e.Set("kind", EventKindClientAuthentication)
-	return e
+	event := &ClientAuthenticationEvent{}
+	event.Set("kind", EventKindClientAuthentication)
+	return event
 }
 
 // ClientAuthentication TBD
-type ClientAuthenticationEvent = RawEvent
+type ClientAuthenticationEvent struct {
+	*RawEvent
+}
 
 func NewNostrConnectEvent() Event {
-	e := &NostrConnectEvent{}
-	e.Set("kind", EventKindNostrConnect)
-	return e
+	event := &NostrConnectEvent{}
+	event.Set("kind", EventKindNostrConnect)
+	return event
 }
 
 // NostrConnect TBD
-type NostrConnectEvent = RawEvent
+type NostrConnectEvent struct {
+	*RawEvent
+}
 
 func NewCategorizedPeopleListEvent() Event {
-	e := &CategorizedPeopleListEvent{}
-	e.Set("kind", EventKindCategorizedPeopleList)
-	return e
+	event := &CategorizedPeopleListEvent{}
+	event.Set("kind", EventKindCategorizedPeopleList)
+	return event
 }
 
 // CategorizedPeopleList TBD
-type CategorizedPeopleListEvent = RawEvent
+type CategorizedPeopleListEvent struct {
+	*RawEvent
+}
 
 func NewCategorizedBookmarkListEvent() Event {
-	e := &CategorizedBookmarkListEvent{}
-	e.Set("kind", EventKindCategorizedBookmarkList)
-	return e
+	event := &CategorizedBookmarkListEvent{}
+	event.Set("kind", EventKindCategorizedBookmarkList)
+	return event
 }
 
 // CategorizedBookmarkList TBD
-type CategorizedBookmarkListEvent = RawEvent
+type CategorizedBookmarkListEvent struct {
+	*RawEvent
+}
 
 func NewProfileBadgesEvent() Event {
-	e := &ProfileBadgesEvent{}
-	e.Set("kind", EventKindProfileBadges)
-	return e
+	event := &ProfileBadgesEvent{}
+	event.Set("kind", EventKindProfileBadges)
+	return event
 }
 
 // ProfileBadges TBD
-type ProfileBadgesEvent = RawEvent
+type ProfileBadgesEvent struct {
+	*RawEvent
+}
 
 func NewBadgeDefinitionEvent() Event {
-	e := &BadgeDefinitionEvent{}
-	e.Set("kind", EventKindBadgeDefinition)
-	return e
+	event := &BadgeDefinitionEvent{}
+	event.Set("kind", EventKindBadgeDefinition)
+	return event
 }
 
 // BadgeDefinition TBD
-type BadgeDefinitionEvent = RawEvent
+type BadgeDefinitionEvent struct {
+	*RawEvent
+}
 
 func NewCreateOrUpdateStallEvent() Event {
-	e := &CreateOrUpdateStallEvent{}
-	e.Set("kind", EventKindCreateOrUpdateStall)
-	return e
+	event := &CreateOrUpdateStallEvent{}
+	event.Set("kind", EventKindCreateOrUpdateStall)
+	return event
 }
 
 // CreateOrUpdateStall TBD
-type CreateOrUpdateStallEvent = RawEvent
+type CreateOrUpdateStallEvent struct {
+	*RawEvent
+}
 
 func NewCreateOrUpdateProductEvent() Event {
-	e := &CreateOrUpdateProductEvent{}
-	e.Set("kind", EventKindCreateOrUpdateProduct)
-	return e
+	event := &CreateOrUpdateProductEvent{}
+	event.Set("kind", EventKindCreateOrUpdateProduct)
+	return event
 }
 
 // CreateOrUpdateProduct TBD
-type CreateOrUpdateProductEvent = RawEvent
+type CreateOrUpdateProductEvent struct {
+	*RawEvent
+}
 
 func NewLongFormContentEvent() Event {
-	e := &LongFormContentEvent{}
-	e.Set("kind", EventKindLongFormContent)
-	return e
+	event := &LongFormContentEvent{}
+	event.Set("kind", EventKindLongFormContent)
+	return event
 }
 
 // LongFormContent TBD
-type LongFormContentEvent = RawEvent
+type LongFormContentEvent struct {
+	*RawEvent
+}
 
 func NewApplicationSpecificDataEvent() Event {
-	e := &ApplicationSpecificDataEvent{}
-	e.Set("kind", EventKindApplicationSpecificData)
-	return e
+	event := &ApplicationSpecificDataEvent{}
+	event.Set("kind", EventKindApplicationSpecificData)
+	return event
 }
 
 // ApplicationSpecificData TBD
-type ApplicationSpecificDataEvent = RawEvent
+type ApplicationSpecificDataEvent struct {
+	*RawEvent
+}

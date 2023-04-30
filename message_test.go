@@ -1,38 +1,25 @@
 package nostr_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/go-nostr/nostr"
 )
 
-func Test_NewAuthMessage(t *testing.T) {
-	type args struct {
-		challenge string
-		event     *nostr.Event
-	}
+func Test_NewRawMessage(t *testing.T) {
 	tests := []struct {
 		name   string
-		args   args
 		expect nostr.Message
 	}{
 		{
-			name: "MUST create a new AuthMessage with given challenge and nil event",
-			args: args{
-				challenge: "test-challenge",
-				event:     nil,
-			},
-			expect: nostr.NewRawMessage(
-				nostr.MessageTypeAuth,
-				"test-challenge",
-			),
+			name:   "MUST create a new RawMessage with given type",
+			expect: &nostr.RawMessage{[]byte("\"type\"")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewAuthMessage(tt.args.challenge, tt.args.event)
+			mess := nostr.NewRawMessage("type")
 			if !reflect.DeepEqual(mess, tt.expect) {
 				t.Fatalf("expected %v, got %v", tt.expect, mess)
 			}
@@ -41,50 +28,76 @@ func Test_NewAuthMessage(t *testing.T) {
 	}
 }
 
-func TestAuthMessage_Marshal(t *testing.T) {
-	type args struct {
-		challenge string
-		event     *nostr.Event
+func TestRawMessage_Marshal(t *testing.T) {
+	type args struct{}
+	type fields struct {
+		mess nostr.Message
 	}
 	tests := []struct {
 		name   string
 		args   args
+		fields fields
 		expect []byte
 		err    error
 	}{
 		{
-			name: "MUST successfully marshal AuthMessage to byte slice",
-			args: args{
-				challenge: "test-challenge",
-				event:     nil,
+			name: "MUST create a new RawMessage with given type",
+			args: args{},
+			fields: fields{
+				mess: nostr.NewRawMessage("type"),
 			},
-			expect: []byte("[\"AUTH\",\"test-challenge\"]"),
-			err:    nil,
+			expect: []byte("[\"type\"]"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			authMessage := nostr.NewAuthMessage(tt.args.challenge, tt.args.event)
-			data, err := authMessage.Marshal()
-			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
-				t.Fatalf("expected error: %s, got error: %s", tt.err, err)
-				return
+			mess, err := tt.fields.mess.Marshal()
+			if err != nil && tt.err == nil {
+				t.Fatalf("expected error %v, got error %v", tt.err, err)
 			}
-			if !reflect.DeepEqual(data, tt.expect) {
-				t.Fatalf("expected: %s, got: %s", tt.expect, data)
+			if !reflect.DeepEqual(mess, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, mess)
 			}
-			t.Logf("got: %+s", data)
+			t.Logf("got %+v", mess)
 		})
 	}
 }
 
-func TestAuthMessage_Unmarshal(t *testing.T) {
+func TestRawMessage_Type(t *testing.T) {
+	type fields struct {
+		mess nostr.Message
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		expect []byte
+		err    error
+	}{
+		{
+			name: "MUST get type for raw message",
+			fields: fields{
+				mess: nostr.NewRawMessage("type"),
+			},
+			expect: []byte("type"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			typ := tt.fields.mess.Type()
+			if !reflect.DeepEqual(typ, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
+			}
+			t.Logf("got %+v", tt.fields.mess)
+		})
+	}
+}
+
+func TestRawMessage_Unmarshal(t *testing.T) {
 	type args struct {
 		data []byte
 	}
 	type fields struct {
-		challenge string
-		event     *nostr.Event
+		mess nostr.Message
 	}
 	tests := []struct {
 		name   string
@@ -94,223 +107,55 @@ func TestAuthMessage_Unmarshal(t *testing.T) {
 		err    error
 	}{
 		{
-			name: "MUST successfully unmarshal byte slice to AuthMessage",
+			name: "MUST unmarshal RawMessage",
 			args: args{
-				data: []byte("[\"AUTH\",\"test-challenge\"]"),
+				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				challenge: "test-challenge",
-				event:     nil,
+				mess: &nostr.RawMessage{},
 			},
-			expect: nostr.NewRawMessage(
-				nostr.MessageTypeAuth,
-				"test-challenge",
-			),
-			err: nil,
-		},
-		{
-			name: "SHOULD return an error when unmarshaling an invalid byte slice",
-			args: args{
-				data: []byte("invalid_data"),
-			},
-			fields: fields{
-				challenge: "test-challenge",
-				event:     nil,
-			},
-			expect: nostr.NewRawMessage(
-				nostr.MessageTypeAuth,
-				"test-challenge",
-			),
-			err: fmt.Errorf("cannot unmarshal AuthMessage: invalid byte slice"),
+			expect: nostr.NewRawMessage("type"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			authMessage := nostr.NewAuthMessage(tt.fields.challenge, tt.fields.event)
-			err := authMessage.Unmarshal(tt.args.data)
-			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
-				t.Fatalf("expected error: %+v, got: %+v", tt.err, err)
+			err := tt.fields.mess.Unmarshal(tt.args.data)
+			if err != nil && tt.err == nil {
+				t.Fatalf("expected error %v, got error %v", tt.err, err)
 			}
-			if !reflect.DeepEqual(authMessage, tt.expect) {
-				t.Fatalf("expected: %+v, got: %+v", tt.expect, authMessage)
+			if !reflect.DeepEqual(tt.fields.mess, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
 			}
-			t.Logf("got: %v", authMessage)
+			t.Logf("got %+v", tt.fields.mess)
 		})
 	}
 }
 
-func Test_NewCloseMessage(t *testing.T) {
-	type args struct {
-		subscriptionID string
-	}
-	tests := []struct {
-		name   string
-		args   args
-		expect nostr.Message
-	}{
-		{
-			name: "MUST create a new CloseMessage with given subscription ID",
-			args: args{
-				subscriptionID: "subscription-id",
-			},
-			expect: nostr.NewRawMessage(
-				nostr.MessageTypeClose,
-				"subscription-id",
-			),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewCloseMessage(tt.args.subscriptionID)
-			if !reflect.DeepEqual(mess, tt.expect) {
-				t.Errorf("expected %v, got %v", mess, tt.expect)
-			}
-			t.Logf("got %+v", mess)
-		})
-	}
-}
-
-func TestCloseMessage_Marshal(t *testing.T) {
-	type args struct {
-		subscriptionID string
-	}
-	tests := []struct {
-		name   string
-		args   args
-		expect []byte
-		err    error
-	}{
-		{
-			name: "MUST successfully marshal CloseMessage to byte slice",
-			args: args{
-				subscriptionID: "subscription-id",
-			},
-			expect: []byte("[\"CLOSE\",\"subscription-id\"]"),
-			err:    nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewCloseMessage(tt.args.subscriptionID)
-			data, err := mess.Marshal()
-			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
-				t.Fatalf("expected error: %s, got error: %s", tt.err, err)
-				return
-			}
-			if !reflect.DeepEqual(data, tt.expect) {
-				t.Fatalf("expected: %s, got: %s", tt.expect, data)
-			}
-			t.Logf("got: %+s", data)
-		})
-	}
-}
-
-func TestCloseMessage_Unmarshal(t *testing.T) {
-	type args struct {
-		data []byte
-	}
+func TestRawMessage_Values(t *testing.T) {
 	type fields struct {
-		subscriptionID string
+		mess nostr.Message
 	}
 	tests := []struct {
 		name   string
-		args   args
 		fields fields
-		expect nostr.Message
+		expect []any
 		err    error
 	}{
 		{
-			name: "MUST successfully unmarshal byte slice to CloseMessage",
-			args: args{
-				data: []byte("[\"CLOSE\",\"subscription-id\"]"),
-			},
+			name: "MUST get type for raw message",
 			fields: fields{
-				subscriptionID: "subscription-id",
+				mess: nostr.NewRawMessage("type"),
 			},
-			expect: nostr.NewRawMessage(
-				nostr.MessageTypeClose,
-				"subscription-id",
-			),
-			err: nil,
+			expect: []any{"type"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewCloseMessage(tt.fields.subscriptionID)
-			err := mess.Unmarshal(tt.args.data)
-			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
-				t.Fatalf("expected error: %+v, got: %+v", tt.err, err)
+			v := tt.fields.mess.Values()
+			if !reflect.DeepEqual(v, tt.expect) {
+				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
 			}
-			if !reflect.DeepEqual(mess, tt.expect) {
-				t.Fatalf("expected: %+v, got: %+v", tt.expect, mess)
-			}
-			t.Logf("got: %v", mess)
-		})
-	}
-}
-
-func Test_NewCountMessage(t *testing.T) {
-	type args struct {
-		subscriptionID string
-		count          *nostr.Count
-	}
-	tests := []struct {
-		name   string
-		args   args
-		expect nostr.Message
-	}{
-		{
-			name: "MUST create a new CountMessage with given subscription ID and count",
-			args: args{
-				subscriptionID: "subscription-id",
-				count:          &nostr.Count{Count: 42},
-			},
-			expect: nostr.NewRawMessage(nostr.MessageTypeCount, &nostr.Count{Count: 42}),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewCountMessage(tt.args.subscriptionID, tt.args.count)
-			if reflect.DeepEqual(tt.expect, mess) {
-				t.Fatalf("expected %v, got %v", tt.expect, mess)
-			}
-			t.Logf("got %+v", mess)
-		})
-	}
-}
-
-func TestCountMessage_Marshal(t *testing.T) {
-	type args struct {
-		subscriptionID string
-		count          *nostr.Count
-	}
-	tests := []struct {
-		name   string
-		args   args
-		expect []byte
-		err    error
-	}{
-		{
-			name: "MUST successfully marshal CountMessage to byte slice",
-			args: args{
-				subscriptionID: "subscription-id",
-				count:          &nostr.Count{Count: 10},
-			},
-			expect: []byte("[\"COUNT\",\"subscription-id\",{\"count\":10}]"),
-			err:    nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewCountMessage(tt.args.subscriptionID, tt.args.count)
-			data, err := mess.Marshal()
-			if (err != nil && tt.err == nil) && (err == nil && tt.err != nil) && (err.Error() != tt.err.Error()) {
-				t.Fatalf("expected error: %s, got error: %s", tt.err, err)
-			}
-			if !reflect.DeepEqual(data, tt.expect) {
-				t.Fatalf("expected: %s, got: %s", tt.expect, data)
-			}
-			t.Logf("got: %+s", data)
+			t.Logf("got %+v", tt.fields.mess)
 		})
 	}
 }
