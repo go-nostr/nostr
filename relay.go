@@ -12,14 +12,11 @@ import (
 )
 
 // New TBD
-func NewRelay() *Relay {
+func NewRelay(opt *RelayOptions) *Relay {
 	rl := &Relay{
-		conn: make(map[*websocket.Conn]struct{}),
-		err:  make(chan error),
-		errHandler: func(err error) {
-			fmt.Printf("Error: %v", err)
-		},
-		messHandlers: make(map[MessageType]MessageHandler),
+		RelayOptions: opt,
+		conn:         make(map[*websocket.Conn]struct{}),
+		messHandlers: make(map[string]MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
 	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.internetIdentifierHandlerFunc)
@@ -27,25 +24,26 @@ func NewRelay() *Relay {
 	return rl
 }
 
-// Relay TBD
-type Relay struct {
+type RelayOptions struct {
 	Name          string       `json:"name,omitempty"`
 	Description   string       `json:"description,omitempty"`
 	PubKey        string       `json:"pub_key,omitempty"`
 	Contact       string       `json:"contact,omitempty"`
-	SupportedNIPs []NIP        `json:"supported_nips,omitempty"`
+	SupportedNIPs []int        `json:"supported_nips,omitempty"`
 	Software      string       `json:"software,omitempty"`
 	Version       string       `json:"version,omitempty"`
 	Limitations   *Limitations `json:"limitations,omitempty"`
+}
 
-	err           chan error
-	errHandler    func(err error)
-	eventHandlers map[EventKind]EventHandler
-	messHandlers  map[MessageType]MessageHandler
-	names         map[string]string
-	serveMux      *http.ServeMux
-	conn          map[*websocket.Conn]struct{}
-	mu            sync.Mutex
+// Relay TBD
+type Relay struct {
+	*RelayOptions
+
+	messHandlers map[string]MessageHandler
+	names        map[string]string
+	serveMux     *http.ServeMux
+	conn         map[*websocket.Conn]struct{}
+	mu           sync.Mutex
 }
 
 // Handle TBD
@@ -58,23 +56,13 @@ func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, 
 	rl.serveMux.HandleFunc(pattern, handler)
 }
 
-// HandleEvent TBD
-func (rl *Relay) HandleEvent(kind EventKind, handler EventHandler) {
-	rl.eventHandlers[kind] = handler
-}
-
-// HandleEventFunc TBD
-func (rl *Relay) HandleEventFunc(kind EventKind, handler func(kind EventKind, evt Event)) {
-	rl.eventHandlers[kind] = EventHandlerFunc(handler)
-}
-
 // HandleMessage TBD
-func (rl *Relay) HandleMessage(typ MessageType, handler MessageHandler) {
+func (rl *Relay) HandleMessage(typ string, handler MessageHandler) {
 	rl.messHandlers[typ] = handler
 }
 
 // HandleMessageFunc TBD
-func (rl *Relay) HandleMessageFunc(typ MessageType, handler func(mess Message)) {
+func (rl *Relay) HandleMessageFunc(typ string, handler func(mess Message)) {
 	rl.messHandlers[typ] = MessageHandlerFunc(handler)
 }
 
@@ -119,7 +107,7 @@ func (rl *Relay) internetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Re
 func (rl *Relay) getConnectionHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		rl.err <- err
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	rl.addConn(conn)
@@ -131,62 +119,19 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 	ctx := context.Background()
 	defer rl.removeConn(conn)
 	for {
-		_, data, err := conn.Read(ctx)
+		_, r, err := conn.Reader(ctx)
 		if err != nil {
-			rl.err <- err
 			return
 		}
-		var args []json.RawMessage
-		if err := json.Unmarshal(data, &args); err != nil {
-			rl.err <- err
+		// TODO: add websocket mess. type handling
+		var mess RawMessage
+		if err := json.NewDecoder(r).Decode(&mess); err != nil {
 			return
 		}
-		var typ MessageType
-		if err := json.Unmarshal(args[0], &typ); err != nil {
-			rl.err <- err
+		if rl.messHandlers[*mess.Type()] == nil {
 			return
 		}
-		switch typ {
-		case MessageTypeAuth:
-			var mess AuthMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeClose:
-			var mess CloseMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeCount:
-			var mess CountMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeEOSE:
-			var mess EOSEMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeEvent:
-			var mess EventMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeNotice:
-			var mess NoticeMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeOk:
-			var mess OkMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		case MessageTypeRequest:
-			var mess RequestMessage
-			mess.Unmarshal(data)
-			go rl.messHandlers[typ].Handle(&mess)
-		default:
-			data, err := NewNoticeMessage("unrecognized message type").Marshal()
-			if err != nil {
-				rl.err <- err
-				return
-			}
-			conn.Write(ctx, websocket.MessageText, data)
-		}
+		go rl.messHandlers[*mess.Type()].Handle(mess)
 	}
 }
 

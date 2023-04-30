@@ -3,42 +3,50 @@ package nostr
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"sync"
-	"time"
 
 	"nhooyr.io/websocket"
 )
 
 // NewClient TBD
-func NewClient() *Client {
+func NewClient(opt *ClientOptions) *Client {
 	return &Client{
-		err:   make(chan error),
-		conns: make(map[*websocket.Conn]struct{}),
+		ClientOptions: opt,
+
+		err:          make(chan error),
+		conns:        make(map[*websocket.Conn]struct{}),
+		messHandlers: map[string]MessageHandler{},
 	}
 }
 
+// ClientOptions TBD
+type ClientOptions struct{}
+
 // Client TBD
 type Client struct {
-	conns         map[*websocket.Conn]struct{}
-	err           chan error
-	eventHandlers map[EventKind]EventHandler
-	messHandlers  map[MessageType]MessageHandler
-	mu            sync.Mutex
+	*ClientOptions
+
+	conns        map[*websocket.Conn]struct{}
+	err          chan error
+	messHandlers map[string]MessageHandler
+	mu           sync.Mutex
 }
 
-// HandleEvent TBD
-func (cl *Client) HandleEvent(kind EventKind, handler EventHandler) {
-	cl.eventHandlers[kind] = handler
+// HandleMessage TBD
+func (cl *Client) HandleMessage(typ string, handler MessageHandler) {
+	cl.messHandlers[typ] = handler
 }
 
-// HandleEventFunc TBD
-func (cl *Client) HandleEventFunc(kind EventKind, handler func(kind EventKind, evt Event)) {
-	cl.eventHandlers[kind] = EventHandlerFunc(handler)
+// HandleMessageFunc TBD
+func (cl *Client) HandleMessageFunc(typ string, handler func(mess Message)) {
+	cl.messHandlers[typ] = MessageHandlerFunc(handler)
 }
 
 // Publish TBD
 func (cl *Client) Publish(mess Message) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	data, err := mess.Marshal()
 	if err != nil {
 		return err
@@ -46,18 +54,22 @@ func (cl *Client) Publish(mess Message) error {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	for conn := range cl.conns {
-		go conn.Write(ctx, websocket.MessageText, data)
+		if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // Subscribe TBD
-func (cl *Client) Subscribe(u string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+func (cl *Client) Subscribe(ctx context.Context, u string) error {
 	conn, _, err := websocket.Dial(ctx, u, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
 	})
+	if err != nil {
+		return err
+	}
+	conn.SetReadLimit(6.4e+7)
 	if err != nil {
 		return err
 	}
@@ -78,62 +90,30 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 	ctx := context.Background()
 	defer cl.removeConn(conn)
 	for {
-		_, data, err := conn.Read(ctx)
+		_, r, err := conn.Reader(ctx)
 		if err != nil {
 			cl.err <- err
 			return
 		}
-		var args []json.RawMessage
-		if err := json.Unmarshal(data, &args); err != nil {
+		// TODO: add websocket mess. type handling
+		var mess RawMessage
+		if err := json.NewDecoder(r).Decode(&mess); err != nil {
+			fmt.Printf("Error: %v", err.Error())
 			cl.err <- err
 			return
 		}
-		var typ MessageType
-		if err := json.Unmarshal(args[0], &typ); err != nil {
+		typ, ok := mess[0].(string)
+		if !ok {
+			err := errors.New("bad mess")
+			fmt.Println(err)
 			cl.err <- err
 			return
 		}
-		switch typ {
-		case MessageTypeAuth:
-			var mess AuthMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeClose:
-			var mess CloseMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeCount:
-			var mess CountMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeEOSE:
-			var mess EOSEMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeEvent:
-			var mess EventMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeNotice:
-			var mess NoticeMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeOk:
-			var mess OkMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		case MessageTypeRequest:
-			var mess RequestMessage
-			mess.Unmarshal(data)
-			go cl.messHandlers[typ].Handle(&mess)
-		default:
-			data, err := NewNoticeMessage("unrecognized message type").Marshal()
-			if err != nil {
-				cl.err <- err
-				return
-			}
-			conn.Write(ctx, websocket.MessageText, data)
+		if cl.messHandlers[typ] == nil {
+			fmt.Printf("Warn: no handler configured for message type: %v\n", typ)
+			return
 		}
+		go cl.messHandlers[typ].Handle(&mess)
 	}
 }
 

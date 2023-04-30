@@ -1,876 +1,407 @@
 package nostr
 
-import "encoding/json"
-
-// EventKind represents the different types of events available.
-type EventKind int64
-
-const (
-	EventKindMetadata                EventKind = 0     // Event for setting metadata
-	EventKindShortTextNote           EventKind = 1     // Event for storing a text note
-	EventKindRecommendRelay          EventKind = 2     // Event for recommending a server
-	EventKindContacts                EventKind = 3     // Event for contact List and petnames
-	EventKindEncryptedDirectMessages EventKind = 4     // Event for encrypted direct messages
-	EventKindEventDeletion           EventKind = 5     // Event for deleting events
-	EventKindReposts                 EventKind = 6     // Event for signaling to followers that another event is worth reading
-	EventKindReaction                EventKind = 7     // Event for reacting to other notes
-	EventKindBadgeAward              EventKind = 8     // Event for awarding badges to users
-	EventKindChannelCreation         EventKind = 40    // Event for creating new channels
-	EventKindChannelMetadata         EventKind = 41    // Event for setting channel metadata
-	EventKindChannelMessage          EventKind = 42    // Event for posting messages in a channel
-	EventKindChannelHideMessage      EventKind = 43    // Event for hiding messages in a channel
-	EventKindChannelMuteUser         EventKind = 44    // Event for muting a user in a channel
-	EventKindReporting               EventKind = 1984  // Event for reporting content or users
-	EventKindZapRequest              EventKind = 9734  // Event for requesting a Zap action
-	EventKindZap                     EventKind = 9735  // Event for performing a Zap action
-	EventKindMuteList                EventKind = 10000 // Event for managing a mute list
-	EventKindPinList                 EventKind = 10001 // Event for managing a pin list
-	EventKindRelayListMetadata       EventKind = 10002 // Event for managing relay list metadata
-	EventKindClientAuthentication    EventKind = 22242 // Event for client authentication process
-	EventKindNostrConnect            EventKind = 24133 // Event for Nostr client connection
-	EventKindCategorizedPeopleList   EventKind = 30000 // Event for managing categorized people list
-	EventKindCategorizedBookmarkList EventKind = 30001 // Event for managing categorized bookmark list
-	EventKindProfileBadges           EventKind = 30008 // Event for profile badges management
-	EventKindBadgeDefinition         EventKind = 30009 // Event for defining badges
-	EventKindCreateOrUpdateStall     EventKind = 30017 // Event for creating or updating a stall
-	EventKindCreateOrUpdateProduct   EventKind = 30018 // Event for creating or updating a product
-	EventKindLongFormContent         EventKind = 30023 // Event for posting long-form content
-	EventKindApplicationSpecificData EventKind = 30078 // Event for managing application-specific data
+import (
+	"encoding/json"
 )
 
-// EventHandlerFunc TBD
-type EventHandlerFunc func(kind EventKind, evt Event)
+const (
+	EventKindMetadata                = 0     // Event for setting metadata
+	EventKindShortTextNote           = 1     // Event for storing a text note
+	EventKindRecommendRelay          = 2     // Event for recommending a server
+	EventKindContacts                = 3     // Event for contact List and petnames
+	EventKindEncryptedDirectMessages = 4     // Event for encrypted direct messages
+	EventKindEventDeletion           = 5     // Event for deleting events
+	EventKindReposts                 = 6     // Event for signaling to followers that another event is worth reading
+	EventKindReaction                = 7     // Event for reacting to other notes
+	EventKindBadgeAward              = 8     // Event for awarding badges to users
+	EventKindChannelCreation         = 40    // Event for creating new channels
+	EventKindChannelMetadata         = 41    // Event for setting channel metadata
+	EventKindChannelMessage          = 42    // Event for posting messages in a channel
+	EventKindChannelHideMessage      = 43    // Event for hiding messages in a channel
+	EventKindChannelMuteUser         = 44    // Event for muting a user in a channel
+	EventKindReporting               = 1984  // Event for reporting content or users
+	EventKindZapRequest              = 9734  // Event for requesting a Zap action
+	EventKindZap                     = 9735  // Event for performing a Zap action
+	EventKindMuteList                = 10000 // Event for managing a mute list
+	EventKindPinList                 = 10001 // Event for managing a pin list
+	EventKindRelayListMetadata       = 10002 // Event for managing relay list metadata
+	EventKindClientAuthentication    = 22242 // Event for client authentication process
+	EventKindNostrConnect            = 24133 // Event for Nostr client connection
+	EventKindCategorizedPeopleList   = 30000 // Event for managing categorized people list
+	EventKindCategorizedBookmarkList = 30001 // Event for managing categorized bookmark list
+	EventKindProfileBadges           = 30008 // Event for profile badges management
+	EventKindBadgeDefinition         = 30009 // Event for defining badges
+	EventKindCreateOrUpdateStall     = 30017 // Event for creating or updating a stall
+	EventKindCreateOrUpdateProduct   = 30018 // Event for creating or updating a product
+	EventKindLongFormContent         = 30023 // Event for posting long-form content
+	EventKindApplicationSpecificData = 30078 // Event for managing application-specific data
+)
 
-// Handle TBD
-func (fn EventHandlerFunc) Handle(kind EventKind, evt Event) {
-	fn(kind, evt)
-}
-
-// EventHandler TBD
-type EventHandler interface {
-	Handle(kind EventKind, evt Event)
-}
-
-// Event represents an event with a specified kind.
 type Event interface {
+	ID() []byte
+	Content() []byte
+	Kind() *int
 	Marshal() ([]byte, error)
+	PublicKey() []byte
+	Sign() error
+	Signature() []byte
+	Tags() []Tag
 	Unmarshal(data []byte) error
-	Validate() error
 }
 
-// BaseEvent TBD
-type BaseEvent struct {
-	ID        string    `json:"id,omitempty"`
-	PubKey    string    `json:"pub_key,omitempty"`
-	CreatedAt int64     `json:"created_at,omitempty"`
-	Kind      EventKind `json:"kind,omitempty"`
-	Tags      []Tag     `json:"tags,omitempty"`
-	Content   string    `json:"content,omitempty"`
-	Signature string    `json:"signature,omitempty"`
+// RawEvent TBD
+type RawEvent map[string]any
+
+// Content TBD
+func (e RawEvent) Content() []byte {
+	if content, ok := e["content"].(string); ok {
+		return []byte(content)
+	}
+	return nil
+}
+
+// ID TBD
+func (e RawEvent) ID() []byte {
+	if id, ok := e["id"].(string); ok {
+		return []byte(id)
+	}
+	return nil
+}
+
+// Kind TBD
+func (e RawEvent) Kind() *int {
+	if v, ok := e["kind"].(float64); ok {
+		kind := int(v)
+		return &kind
+	}
+	return nil
+}
+
+// PublicKey TBD
+func (e RawEvent) PublicKey() []byte {
+	if pubKey, ok := e["pubkey"].(string); ok {
+		return []byte(pubKey)
+	}
+	return nil
+}
+
+// Signature TBD
+func (e RawEvent) Signature() []byte {
+	if sig, ok := e["sig"].(string); ok {
+		return []byte(sig)
+	}
+	return nil
+}
+
+// Sign TBD
+func (e RawEvent) Sign() error {
+	return nil
+}
+
+// Tags TBD
+func (e RawEvent) Tags() []Tag {
+	var tags []Tag
+	if m, ok := e["tags"].([]any); ok {
+		for _, n := range m {
+			if v, ok := n.([]any); ok {
+				tags = append(tags, RawTag(v))
+			}
+		}
+	}
+	return tags
 }
 
 // Marshal TBD
-func (e *BaseEvent) Marshal() ([]byte, error) {
+func (e *RawEvent) Marshal() ([]byte, error) {
 	return json.Marshal(e)
 }
 
 // Unmarshal TBD
-func (e *BaseEvent) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, e)
+func (e *RawEvent) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, &e)
 }
 
 // Validate TBD
-func (e *BaseEvent) Validate() error {
+func (e *RawEvent) Validate() error {
 	return nil
 }
 
-// { TBD
 // NewMetadataEvent TBD
 func NewMetadataEvent() Event {
-	return &MetadataEvent{&BaseEvent{
-		Kind: EventKindMetadata,
-	}}
+	return &MetadataEvent{
+		"kind": EventKindMetadata,
+	}
 }
 
 // MetadataEvent TBD
-type MetadataEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *MetadataEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *MetadataEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *MetadataEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type MetadataEvent = RawEvent
 
 // NewShortTextNoteEvent TBD
 func NewShortTextNoteEvent() Event {
-	return &ShortTextNoteEvent{&BaseEvent{
-		Kind: EventKindShortTextNote,
-	}}
+	return &ShortTextNoteEvent{
+		"kind": EventKindShortTextNote,
+	}
 }
 
 // ShortTextNoteEvent TBD
-type ShortTextNoteEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ShortTextNoteEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ShortTextNoteEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ShortTextNoteEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ShortTextNoteEvent = RawEvent
 
 // NewRecommendRelayEvent TBD
 func NewRecommendRelayEvent() Event {
-	return &RecommendRelayEvent{&BaseEvent{
-		Kind: EventKindRecommendRelay,
-	}}
+	return &RecommendRelayEvent{
+		"kind": EventKindRecommendRelay,
+	}
 }
 
 // RecommendRelayEvent TBD
-type RecommendRelayEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *RecommendRelayEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *RecommendRelayEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *RecommendRelayEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type RecommendRelayEvent = RawEvent
 
 // NewContactsEvent TBD
 func NewContactsEvent() Event {
-	return &ContactsEvent{&BaseEvent{
-		Kind: EventKindContacts,
-	}}
+	return &ContactsEvent{
+		"kind": EventKindContacts,
+	}
 }
 
 // ContactsEvent TBD
-type ContactsEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ContactsEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ContactsEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ContactsEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ContactsEvent = RawEvent
 
 // NewEncryptedDirectMessagesEvent TBD
 func NewEncryptedDirectMessagesEvent() Event {
-	return &EncryptedDirectMessagesEvent{&BaseEvent{
-		Kind: EventKindEncryptedDirectMessages,
-	}}
+	return &EncryptedDirectMessagesEvent{
+		"kind": EventKindEncryptedDirectMessages,
+	}
 }
 
 // EncryptedDirectMessagesEvent TBD
-type EncryptedDirectMessagesEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *EncryptedDirectMessagesEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *EncryptedDirectMessagesEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *EncryptedDirectMessagesEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type EncryptedDirectMessagesEvent = RawEvent
 
 // NewEventDeletionEvent TBD
 func NewEventDeletionEvent() Event {
-	return &EventDeletionEvent{&BaseEvent{
-		Kind: EventKindEventDeletion,
-	}}
+	return &EventDeletionEvent{
+		"kind": EventKindEventDeletion,
+	}
 }
 
 // EventDeletionEvent TBD
-type EventDeletionEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *EventDeletionEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *EventDeletionEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *EventDeletionEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type EventDeletionEvent = RawEvent
 
 // NewEventRepostsEvent TBD
 func NewEventRepostsEvent() Event {
-	return &EventRepostsEvent{&BaseEvent{
-		Kind: EventKindReposts,
-	}}
+	return &EventRepostsEvent{
+		"kind": EventKindReposts,
+	}
 }
 
 // EventRepostsEvent TBD
-type EventRepostsEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *EventRepostsEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *EventRepostsEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *EventRepostsEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type EventRepostsEvent = RawEvent
 
 // NewReactionEvent TBD
 func NewReactionEvent() Event {
-	return &ReactionEvent{&BaseEvent{
-		Kind: EventKindReaction,
-	}}
+	return &ReactionEvent{
+		"kind": EventKindReaction,
+	}
 }
 
 // ReactionEvent TBD
-type ReactionEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ReactionEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ReactionEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ReactionEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ReactionEvent = RawEvent
 
 // NewBadgeAwardEvent TBD
 func NewBadgeAwardEvent() Event {
-	return &BadgeAwardEvent{&BaseEvent{
-		Kind: EventKindBadgeAward,
-	}}
+	return &BadgeAwardEvent{
+		"kind": EventKindBadgeAward,
+	}
 }
 
 // BadgeAwardEvent TBD
-type BadgeAwardEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *BadgeAwardEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *BadgeAwardEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *BadgeAwardEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type BadgeAwardEvent = RawEvent
 
 // NewChannelCreationEvent TBD
 func NewChannelCreationEvent() Event {
-	return &ChannelCreationEvent{&BaseEvent{
-		Kind: EventKindChannelCreation,
-	}}
+	return &ChannelCreationEvent{
+		"kind": EventKindChannelCreation,
+	}
 }
 
 // ChannelCreationEvent TBD
-type ChannelCreationEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ChannelCreationEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ChannelCreationEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ChannelCreationEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ChannelCreationEvent = RawEvent
 
 func NewChannelMetadataEvent() Event {
-	return &ChannelMetadataEvent{&BaseEvent{
-		Kind: EventKindChannelMetadata,
-	}}
+	return &ChannelMetadataEvent{
+		"kind": EventKindChannelMetadata,
+	}
 }
 
 // ChannelMetadata TBD
-type ChannelMetadataEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ChannelMetadataEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ChannelMetadataEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ChannelMetadataEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ChannelMetadataEvent = RawEvent
 
 func NewChannelMessageEvent() Event {
-	return &ChannelMessageEvent{&BaseEvent{
-		Kind: EventKindChannelMessage,
-	}}
+	return &ChannelMessageEvent{
+		"kind": EventKindChannelMessage,
+	}
 }
 
 // ChannelMessage TBD
-type ChannelMessageEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ChannelMessageEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ChannelMessageEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ChannelMessageEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ChannelMessageEvent = RawEvent
 
 func NewChannelHideMessageEvent() Event {
-	return &ChannelHideMessageEvent{&BaseEvent{
-		Kind: EventKindChannelHideMessage,
-	}}
+	return &ChannelHideMessageEvent{
+		"kind": EventKindChannelHideMessage,
+	}
 }
 
 // ChannelHideMessage TBD
-type ChannelHideMessageEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ChannelHideMessageEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ChannelHideMessageEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ChannelHideMessageEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ChannelHideMessageEvent = RawEvent
 
 func NewChannelMuteUserEvent() Event {
-	return &ChannelMuteUserEvent{&BaseEvent{
-		Kind: EventKindChannelMuteUser,
-	}}
+	return &ChannelMuteUserEvent{
+		"kind": EventKindChannelMuteUser,
+	}
 }
 
 // ChannelMuteUser TBD
-type ChannelMuteUserEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ChannelMuteUserEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ChannelMuteUserEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ChannelMuteUserEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ChannelMuteUserEvent = RawEvent
 
 func NewReportingEvent() Event {
-	return &ReportingEvent{&BaseEvent{
-		Kind: EventKindReporting,
-	}}
+	return &ReportingEvent{
+		"kind": EventKindReporting,
+	}
 }
 
 // Reporting TBD
-type ReportingEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ReportingEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ReportingEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ReportingEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ReportingEvent = RawEvent
 
 func NewZapRequestEvent() Event {
-	return &ZapRequestEvent{&BaseEvent{
-		Kind: EventKindZapRequest,
-	}}
+	return &ZapRequestEvent{
+		"kind": EventKindZapRequest,
+	}
 }
 
 // ZapRequest TBD
-type ZapRequestEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ZapRequestEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ZapRequestEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ZapRequestEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ZapRequestEvent = RawEvent
 
 func NewZapEvent() Event {
-	return &ZapEvent{&BaseEvent{
-		Kind: EventKindZap,
-	}}
+	return &ZapEvent{
+		"kind": EventKindZap,
+	}
 }
 
 // Zap TBD
-type ZapEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ZapEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ZapEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ZapEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ZapEvent = RawEvent
 
 func NewMuteListEvent() Event {
-	return &MuteListEvent{&BaseEvent{
-		Kind: EventKindMuteList,
-	}}
+	return &MuteListEvent{
+		"kind": EventKindMuteList,
+	}
 }
 
 // MuteList TBD
-type MuteListEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *MuteListEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *MuteListEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *MuteListEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type MuteListEvent = RawEvent
 
 func NewPinListEvent() Event {
-	return &PinListEvent{&BaseEvent{
-		Kind: EventKindPinList,
-	}}
+	return &PinListEvent{
+		"kind": EventKindPinList,
+	}
 }
 
 // PinList TBD
-type PinListEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *PinListEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *PinListEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *PinListEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type PinListEvent = RawEvent
 
 func NewRelayListMetadataEvent() Event {
-	return &RelayListMetadataEvent{&BaseEvent{
-		Kind: EventKindRelayListMetadata,
-	}}
+	return &RelayListMetadataEvent{
+		"kind": EventKindRelayListMetadata,
+	}
 }
 
 // RelayListMetadata TBD
-type RelayListMetadataEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *RelayListMetadataEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *RelayListMetadataEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *RelayListMetadataEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type RelayListMetadataEvent = RawEvent
 
 func NewClientAuthenticationEvent() Event {
-	return &ClientAuthenticationEvent{&BaseEvent{
-		Kind: EventKindClientAuthentication,
-	}}
+	return &ClientAuthenticationEvent{
+		"kind": EventKindClientAuthentication,
+	}
 }
 
 // ClientAuthentication TBD
-type ClientAuthenticationEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ClientAuthenticationEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ClientAuthenticationEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ClientAuthenticationEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ClientAuthenticationEvent = RawEvent
 
 func NewNostrConnectEvent() Event {
-	return &NostrConnectEvent{&BaseEvent{
-		Kind: EventKindNostrConnect,
-	}}
+	return &NostrConnectEvent{
+		"kind": EventKindNostrConnect,
+	}
 }
 
 // NostrConnect TBD
-type NostrConnectEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *NostrConnectEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *NostrConnectEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *NostrConnectEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type NostrConnectEvent = RawEvent
 
 func NewCategorizedPeopleListEvent() Event {
-	return &CategorizedPeopleListEvent{&BaseEvent{
-		Kind: EventKindCategorizedPeopleList,
-	}}
+	return &CategorizedPeopleListEvent{
+		"kind": EventKindCategorizedPeopleList,
+	}
 }
 
 // CategorizedPeopleList TBD
-type CategorizedPeopleListEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *CategorizedPeopleListEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *CategorizedPeopleListEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *CategorizedPeopleListEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type CategorizedPeopleListEvent = RawEvent
 
 func NewCategorizedBookmarkListEvent() Event {
-	return &CategorizedBookmarkListEvent{&BaseEvent{
-		Kind: EventKindCategorizedBookmarkList,
-	}}
+	return &CategorizedBookmarkListEvent{
+		"kind": EventKindCategorizedBookmarkList,
+	}
 }
 
 // CategorizedBookmarkList TBD
-type CategorizedBookmarkListEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *CategorizedBookmarkListEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *CategorizedBookmarkListEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *CategorizedBookmarkListEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type CategorizedBookmarkListEvent = RawEvent
 
 func NewProfileBadgesEvent() Event {
-	return &ProfileBadgesEvent{&BaseEvent{
-		Kind: EventKindProfileBadges,
-	}}
+	return &ProfileBadgesEvent{
+		"kind": EventKindProfileBadges,
+	}
 }
 
 // ProfileBadges TBD
-type ProfileBadgesEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ProfileBadgesEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ProfileBadgesEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ProfileBadgesEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ProfileBadgesEvent = RawEvent
 
 func NewBadgeDefinitionEvent() Event {
-	return &BadgeDefinitionEvent{&BaseEvent{
-		Kind: EventKindBadgeDefinition,
-	}}
+	return &BadgeDefinitionEvent{
+		"kind": EventKindBadgeDefinition,
+	}
 }
 
 // BadgeDefinition TBD
-type BadgeDefinitionEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *BadgeDefinitionEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *BadgeDefinitionEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *BadgeDefinitionEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type BadgeDefinitionEvent = RawEvent
 
 func NewCreateOrUpdateStallEvent() Event {
-	return &CreateOrUpdateStallEvent{&BaseEvent{
-		Kind: EventKindCreateOrUpdateStall,
-	}}
+	return &CreateOrUpdateStallEvent{
+		"kind": EventKindCreateOrUpdateStall,
+	}
 }
 
 // CreateOrUpdateStall TBD
-type CreateOrUpdateStallEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *CreateOrUpdateStallEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *CreateOrUpdateStallEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *CreateOrUpdateStallEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type CreateOrUpdateStallEvent = RawEvent
 
 func NewCreateOrUpdateProductEvent() Event {
-	return &CreateOrUpdateProductEvent{&BaseEvent{
-		Kind: EventKindCreateOrUpdateProduct,
-	}}
+	return &CreateOrUpdateProductEvent{
+		"kind": EventKindCreateOrUpdateProduct,
+	}
 }
 
 // CreateOrUpdateProduct TBD
-type CreateOrUpdateProductEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *CreateOrUpdateProductEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *CreateOrUpdateProductEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *CreateOrUpdateProductEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type CreateOrUpdateProductEvent = RawEvent
 
 func NewLongFormContentEvent() Event {
-	return &LongFormContentEvent{&BaseEvent{
-		Kind: EventKindLongFormContent,
-	}}
+	return &LongFormContentEvent{
+		"kind": EventKindLongFormContent,
+	}
 }
 
 // LongFormContent TBD
-type LongFormContentEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *LongFormContentEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *LongFormContentEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *LongFormContentEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type LongFormContentEvent = RawEvent
 
 func NewApplicationSpecificDataEvent() Event {
-	return &ApplicationSpecificDataEvent{&BaseEvent{
-		Kind: EventKindApplicationSpecificData,
-	}}
+	return &ApplicationSpecificDataEvent{
+		"kind": EventKindApplicationSpecificData,
+	}
 }
 
 // ApplicationSpecificData TBD
-type ApplicationSpecificDataEvent struct {
-	*BaseEvent
-}
-
-// Marshal TBD
-func (e *ApplicationSpecificDataEvent) Marshal() ([]byte, error) {
-	return e.BaseEvent.Marshal()
-}
-
-// Unmarshal TBD
-func (e *ApplicationSpecificDataEvent) Unmarshal(data []byte) error {
-	return e.BaseEvent.Unmarshal(data)
-}
-
-// Validate TBD
-func (e *ApplicationSpecificDataEvent) Validate() error {
-	return e.BaseEvent.Validate()
-}
+type ApplicationSpecificDataEvent = RawEvent

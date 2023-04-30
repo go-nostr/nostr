@@ -12,14 +12,14 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	r := nostr.NewRelay()
+	r := nostr.NewRelay(nil)
 	if r == nil {
 		t.Fatal("New should not return nil")
 	}
 }
 
 func TestRelay_WellKnownNostrEndpoint(t *testing.T) {
-	r := nostr.NewRelay()
+	r := nostr.NewRelay(nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	type args struct {

@@ -2,8 +2,8 @@ package nostr
 
 // CommandResult TBD
 type CommandResult struct {
-	Status  string `json:"status,omitempty"`
-	EventID string `json:"event_id,omitempty"`
+	Status  []byte `json:"status,omitempty"`
+	EventID []byte `json:"event_id,omitempty"`
 	IsSaved bool   `json:"is_saved,omitempty"`
-	Message string `json:"message,omitempty"`
+	Message []byte `json:"message,omitempty"`
 }
