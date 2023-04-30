@@ -16,35 +16,34 @@ const (
 
 var cl = nostr.NewClient(nil)
 
-// func usageFunc() {
-// 	fmt.Printf(
-// 		"go-nostr: manage and communicate with Nostr protocol for decentralized social media." +
-// 			"\n\n" +
-// 			"Usage:" +
-// 			"\n\n" +
-// 			"\tnostr [command] [options]" +
-// 			"\n\n" +
-// 			"The commands are:" +
-// 			"\n\n" +
-// 			"\tauth\n" +
-// 			"\tclose\n" +
-// 			"\tcount\n" +
-// 			"\tevent\n" +
-// 			"\treq\n\n",
-// 	)
-// }
+func usageFunc() {
+	fmt.Printf(
+		"go-nostr: manage and communicate with Nostr protocol for decentralized social media." +
+			"\n\n" +
+			"Usage:" +
+			"\n\n" +
+			"\tnostr [command] [options]" +
+			"\n\n" +
+			"The commands are:" +
+			"\n\n" +
+			"\tauth\n" +
+			"\tclose\n" +
+			"\tcount\n" +
+			"\tevent\n" +
+			"\treq\n\n",
+	)
+}
 
 func init() {
-	// flag.Usage = usageFunc
+	flag.Usage = usageFunc
 }
 
 func main() {
 	if len(os.Args[1:]) < 1 {
 		flag.Usage()
+		os.Exit(1)
 		return
 	}
-
-	// os.Exit(1)
 
 	cmds := map[string]Command{
 		"auth":  NewAuthCommand(),
@@ -187,9 +186,11 @@ func (c *RequestCommand) Run() error {
 	})
 	if err := c.cl.Subscribe(ctx, c.relay); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	if err := c.cl.Publish(mess); err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	for {
 		select {
