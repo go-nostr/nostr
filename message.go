@@ -38,40 +38,46 @@ type MessageHandler interface {
 
 // Message is an interface for encoding and marshaling messages.
 type Message interface {
-	Arg(i int) any
-	Args() []any
 	Marshal() ([]byte, error)
-	Type() *string
+	Type() []byte
 	Unmarshal(data []byte) error
+	Values() []any
+}
+
+func NewRawMessage(typ string, val ...any) Message {
+	mess := RawMessage{}
+	mess.Push(typ)
+	for _, v := range val {
+		mess.Push(v)
+	}
+	return mess
 }
 
 // RawMessage TBD
-type RawMessage []any
+type RawMessage []json.RawMessage
 
 // Marshal TBD
 func (m RawMessage) Marshal() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// Arg TBD
-func (m RawMessage) Arg(i int) any {
-	if len(m) > i {
-		return m[i]
-	}
-	return nil
-}
-
 // Args TBD
-func (m RawMessage) Args() []any {
-	return m
+func (m *RawMessage) Push(v any) error {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	*m = append(*m, data)
+	return nil
 }
 
 // Type TBD
-func (m RawMessage) Type() *string {
-	if typ, ok := m.Arg(0).(string); ok {
-		return &typ
+func (m RawMessage) Type() []byte {
+	var t string
+	if err := json.Unmarshal(m[0], &t); err != nil {
+		return nil
 	}
-	return nil
+	return []byte(t)
 }
 
 // Unmarshal TBD
@@ -79,15 +85,32 @@ func (m RawMessage) Unmarshal(data []byte) error {
 	return json.Unmarshal(data, &m)
 }
 
+// Values TBD
+func (m RawMessage) Values() []any {
+	v := make([]any, len(m))
+	for i := 0; i < len(m); i++ {
+		err := json.Unmarshal(m[i], v[i])
+		if err != nil {
+			continue
+		}
+	}
+	return v
+}
+
 // AuthMessage TBD
 type AuthMessage = RawMessage
 
 // NewAuthMessage TBD
 func NewAuthMessage(challenge string, event *Event) Message {
+	mess := AuthMessage{}
+	mess.Push(MessageTypeAuth)
 	if challenge != "" {
-		return &AuthMessage{MessageTypeAuth, challenge}
+		mess.Push(challenge)
+	} else if event != nil {
+		mess.Push(event)
+
 	}
-	return &AuthMessage{MessageTypeAuth, event}
+	return mess
 }
 
 // CloseMessage TBD
@@ -95,7 +118,10 @@ type CloseMessage = RawMessage
 
 // NewCloseMessage TBD
 func NewCloseMessage(subscriptionID string) Message {
-	return &CloseMessage{MessageTypeClose, subscriptionID}
+	mess := CloseMessage{}
+	mess.Push(MessageTypeClose)
+	mess.Push(subscriptionID)
+	return mess
 }
 
 // CountMessage TBD
@@ -103,12 +129,15 @@ type CountMessage = RawMessage
 
 // NewCountMessage TBD
 func NewCountMessage(subscriptionID string, count *Count, filters ...*Filter) Message {
+	mess := CountMessage{}
+	mess.Push(MessageTypeCount)
+	mess.Push(subscriptionID)
 	if count != nil {
-		return &CountMessage{MessageTypeCount, subscriptionID, count}
+		mess.Push(count)
+		return mess
 	}
-	mess := &CountMessage{MessageTypeCount, subscriptionID}
-	for _, f := range filters {
-		*mess = append(*mess, *f)
+	for _, v := range filters {
+		mess.Push(v)
 	}
 	return mess
 }
@@ -118,10 +147,10 @@ type EOSEMessage = RawMessage
 
 // NewEOSEMessage TBD
 func NewEOSEMessage(subscriptionID string) Message {
-	return &EOSEMessage{
-		MessageTypeEOSE,
-		subscriptionID,
-	}
+	mess := EOSEMessage{}
+	mess.Push(MessageTypeEOSE)
+	mess.Push(subscriptionID)
+	return mess
 }
 
 // EventMessage TBD
@@ -129,23 +158,27 @@ type EventMessage = RawMessage
 
 // NewEventMessage TBD
 func NewEventMessage(subscriptionID string, event Event) Message {
-	return &EventMessage{
-		MessageTypeEvent,
-		subscriptionID,
-		event,
-	}
+	mess := EventMessage{}
+	mess.Push(MessageTypeEvent)
+	mess.Push(subscriptionID)
+	mess.Push(event)
+	return mess
 }
 
 func (m EventMessage) Event() Event {
-	byt, err := json.Marshal(m.Arg(2))
-	if err != nil {
+	var e RawEvent
+	if err := json.Unmarshal(m[2], &e); err != nil {
 		return nil
 	}
-	var rawEvent RawEvent
-	if err := rawEvent.Unmarshal(byt); err != nil {
+	return &e
+}
+
+func (m EventMessage) SubscriptionID() []byte {
+	var subscriptionID []byte
+	if err := json.Unmarshal(m[1], &subscriptionID); err != nil {
 		return nil
 	}
-	return &rawEvent
+	return subscriptionID
 }
 
 // NoticeMessage TBD
@@ -153,7 +186,10 @@ type NoticeMessage = RawMessage
 
 // NewNoticeMessage TBD
 func NewNoticeMessage(notice string) Message {
-	return &NoticeMessage{MessageTypeNotice, notice}
+	mess := NoticeMessage{}
+	mess.Push(MessageTypeNotice)
+	mess.Push(notice)
+	return mess
 }
 
 // OkMessage TBD
@@ -161,7 +197,12 @@ type OkMessage = RawMessage
 
 // NewOkMessage TBD
 func NewOkMessage(eventID string, isSaved bool, message string) Message {
-	return &OkMessage{MessageTypeOk, eventID, isSaved, message}
+	mess := OkMessage{}
+	mess.Push(MessageTypeOk)
+	mess.Push(eventID)
+	mess.Push(isSaved)
+	mess.Push(message)
+	return mess
 }
 
 // RequestMessage TBD
@@ -169,5 +210,9 @@ type RequestMessage = RawMessage
 
 // NewRequestMessage TBD
 func NewRequestMessage(subscriptionID string, filter *Filter) Message {
-	return &RequestMessage{MessageTypeRequest, subscriptionID, filter}
+	mess := RequestMessage{}
+	mess.Push(MessageTypeRequest)
+	mess.Push(subscriptionID)
+	mess.Push(filter)
+	return mess
 }

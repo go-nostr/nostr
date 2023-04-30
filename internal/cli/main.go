@@ -48,6 +48,7 @@ func main() {
 		if eventMess, ok := mess.(*nostr.EventMessage); ok {
 			fmt.Printf("%s", eventMess.Event().Content())
 		}
+		// fmt.Printf("%v", mess)
 	})
 	cl.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
 		ch <- mess

@@ -24,10 +24,10 @@ func Test_NewAuthMessage(t *testing.T) {
 				challenge: "test-challenge",
 				event:     nil,
 			},
-			expect: &nostr.RawMessage{
+			expect: nostr.NewRawMessage(
 				nostr.MessageTypeAuth,
 				"test-challenge",
-			},
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -102,10 +102,10 @@ func TestAuthMessage_Unmarshal(t *testing.T) {
 				challenge: "test-challenge",
 				event:     nil,
 			},
-			expect: &nostr.AuthMessage{
+			expect: nostr.NewRawMessage(
 				nostr.MessageTypeAuth,
 				"test-challenge",
-			},
+			),
 			err: nil,
 		},
 		{
@@ -117,10 +117,10 @@ func TestAuthMessage_Unmarshal(t *testing.T) {
 				challenge: "test-challenge",
 				event:     nil,
 			},
-			expect: &nostr.AuthMessage{
+			expect: nostr.NewRawMessage(
 				nostr.MessageTypeAuth,
 				"test-challenge",
-			},
+			),
 			err: fmt.Errorf("cannot unmarshal AuthMessage: invalid byte slice"),
 		},
 	}
@@ -153,10 +153,10 @@ func Test_NewCloseMessage(t *testing.T) {
 			args: args{
 				subscriptionID: "subscription-id",
 			},
-			expect: &nostr.CloseMessage{
+			expect: nostr.NewRawMessage(
 				nostr.MessageTypeClose,
 				"subscription-id",
-			},
+			),
 		},
 	}
 	for _, tt := range tests {
@@ -227,10 +227,10 @@ func TestCloseMessage_Unmarshal(t *testing.T) {
 			fields: fields{
 				subscriptionID: "subscription-id",
 			},
-			expect: &nostr.RawMessage{
+			expect: nostr.NewRawMessage(
 				nostr.MessageTypeClose,
 				"subscription-id",
-			},
+			),
 			err: nil,
 		},
 	}
@@ -257,7 +257,7 @@ func Test_NewCountMessage(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		expect *nostr.CountMessage
+		expect nostr.Message
 	}{
 		{
 			name: "MUST create a new CountMessage with given subscription ID and count",
@@ -265,11 +265,7 @@ func Test_NewCountMessage(t *testing.T) {
 				subscriptionID: "subscription-id",
 				count:          &nostr.Count{Count: 42},
 			},
-			expect: &nostr.CountMessage{nostr.RawMessage{
-				nostr.MessageTypeCount,
-				"subscription-id",
-				&nostr.Count{Count: 42},
-			}},
+			expect: nostr.NewRawMessage(nostr.MessageTypeCount, &nostr.Count{Count: 42}),
 		},
 	}
 	for _, tt := range tests {

@@ -3,7 +3,6 @@ package nostr
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -102,18 +101,12 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 			cl.err <- err
 			return
 		}
-		typ, ok := mess[0].(string)
-		if !ok {
-			err := errors.New("bad mess")
-			fmt.Println(err)
-			cl.err <- err
-			return
-		}
-		if cl.messHandlers[typ] == nil {
+		typ := mess.Type()
+		if cl.messHandlers[string(typ)] == nil {
 			fmt.Printf("Warn: no handler configured for message type: %v\n", typ)
 			return
 		}
-		go cl.messHandlers[typ].Handle(&mess)
+		go cl.messHandlers[string(typ)].Handle(&mess)
 	}
 }
 
