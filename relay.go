@@ -131,7 +131,7 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 		if rl.messHandlers[string(mess.Type())] == nil {
 			return
 		}
-		go rl.messHandlers[string(mess.Type())].Handle(mess)
+		go rl.messHandlers[string(mess.Type())].Handle(&mess)
 	}
 }
 

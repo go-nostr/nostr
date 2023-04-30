@@ -27,8 +27,8 @@ const (
 type MessageHandlerFunc func(mess Message)
 
 // Handle TBD
-func (fn MessageHandlerFunc) Handle(mess Message) {
-	fn(mess)
+func (f MessageHandlerFunc) Handle(mess Message) {
+	f(mess)
 }
 
 // MessageHandler TBD
@@ -39,17 +39,16 @@ type MessageHandler interface {
 // Message is an interface for encoding and marshaling messages.
 type Message interface {
 	Marshal() ([]byte, error)
+	Push(v any) error
 	Type() []byte
 	Unmarshal(data []byte) error
 	Values() []any
 }
 
-func NewRawMessage(typ string, val ...any) Message {
-	mess := RawMessage{}
+// NewRawMessage
+func NewRawMessage(typ string) Message {
+	mess := &RawMessage{}
 	mess.Push(typ)
-	for _, v := range val {
-		mess.Push(v)
-	}
 	return mess
 }
 
@@ -57,11 +56,11 @@ func NewRawMessage(typ string, val ...any) Message {
 type RawMessage []json.RawMessage
 
 // Marshal TBD
-func (m RawMessage) Marshal() ([]byte, error) {
+func (m *RawMessage) Marshal() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// Args TBD
+// Push TBD
 func (m *RawMessage) Push(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -72,147 +71,161 @@ func (m *RawMessage) Push(v any) error {
 }
 
 // Type TBD
-func (m RawMessage) Type() []byte {
-	var t string
-	if err := json.Unmarshal(m[0], &t); err != nil {
-		return nil
+func (m *RawMessage) Type() []byte {
+	if len(*m) < 1 {
+		return []byte{}
 	}
-	return []byte(t)
+	var typ string
+	if err := json.Unmarshal((*m)[0], &typ); err != nil {
+		return []byte{}
+	}
+	return []byte(typ)
 }
 
 // Unmarshal TBD
-func (m RawMessage) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, &m)
+func (m *RawMessage) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, m)
 }
 
 // Values TBD
-func (m RawMessage) Values() []any {
-	v := make([]any, len(m))
-	for i := 0; i < len(m); i++ {
-		err := json.Unmarshal(m[i], v[i])
-		if err != nil {
-			continue
-		}
+func (m *RawMessage) Values() []any {
+	var vals []any
+	for _, arg := range *m {
+		var val any
+		json.Unmarshal(arg, &val)
+		vals = append(vals, val)
 	}
-	return v
+	return vals
 }
 
-// AuthMessage TBD
-type AuthMessage = RawMessage
-
-// NewAuthMessage TBD
 func NewAuthMessage(challenge string, event *Event) Message {
-	mess := AuthMessage{}
+	mess := &AuthMessage{&RawMessage{}}
 	mess.Push(MessageTypeAuth)
 	if challenge != "" {
 		mess.Push(challenge)
-	} else if event != nil {
-		mess.Push(event)
-
 	}
+	if event != nil {
+		mess.Push(event)
+	}
+	return mess
+}
+
+// AuthMessage TBD
+type AuthMessage struct {
+	*RawMessage
+}
+
+func NewCloseMessage() Message {
+	mess := &CloseMessage{&RawMessage{}}
+	mess.Push(MessageTypeClose)
 	return mess
 }
 
 // CloseMessage TBD
-type CloseMessage = RawMessage
+type CloseMessage struct {
+	*RawMessage
+}
 
-// NewCloseMessage TBD
-func NewCloseMessage(subscriptionID string) Message {
-	mess := CloseMessage{}
-	mess.Push(MessageTypeClose)
-	mess.Push(subscriptionID)
+func NewCountMessage() Message {
+	mess := &CountMessage{&RawMessage{}}
+	mess.Push(MessageTypeCount)
 	return mess
 }
 
 // CountMessage TBD
-type CountMessage = RawMessage
+type CountMessage struct {
+	*RawMessage
+}
 
-// NewCountMessage TBD
-func NewCountMessage(subscriptionID string, count *Count, filters ...*Filter) Message {
-	mess := CountMessage{}
-	mess.Push(MessageTypeCount)
-	mess.Push(subscriptionID)
-	if count != nil {
-		mess.Push(count)
-		return mess
-	}
-	for _, v := range filters {
-		mess.Push(v)
-	}
+func NewEOSEMessage() Message {
+	mess := &EOSEMessage{&RawMessage{}}
+	mess.Push(MessageTypeEOSE)
 	return mess
 }
 
 // EOSEMessage TBD
-type EOSEMessage = RawMessage
+type EOSEMessage struct {
+	*RawMessage
+}
 
-// NewEOSEMessage TBD
-func NewEOSEMessage(subscriptionID string) Message {
-	mess := EOSEMessage{}
-	mess.Push(MessageTypeEOSE)
-	mess.Push(subscriptionID)
+func NewEventMessage() Message {
+	mess := &EventMessage{&RawMessage{}}
+	mess.Push(MessageTypeEvent)
 	return mess
 }
 
 // EventMessage TBD
-type EventMessage = RawMessage
-
-// NewEventMessage TBD
-func NewEventMessage(subscriptionID string, event Event) Message {
-	mess := EventMessage{}
-	mess.Push(MessageTypeEvent)
-	mess.Push(subscriptionID)
-	mess.Push(event)
-	return mess
+type EventMessage struct {
+	*RawMessage
 }
 
-func (m EventMessage) Event() Event {
+func (m *EventMessage) Event() Event {
+	if len(*m.RawMessage) < 3 {
+		return nil
+	}
 	var e RawEvent
-	if err := json.Unmarshal(m[2], &e); err != nil {
+	if err := json.Unmarshal((*m.RawMessage)[2], &e); err != nil {
 		return nil
 	}
 	return &e
 }
 
-func (m EventMessage) SubscriptionID() []byte {
-	var subscriptionID []byte
-	if err := json.Unmarshal(m[1], &subscriptionID); err != nil {
-		return nil
+func (m *EventMessage) SubscriptionID() []byte {
+	if len(*m.RawMessage) < 3 {
+		return []byte{}
 	}
-	return subscriptionID
+	var sid string
+	if err := json.Unmarshal((*m.RawMessage)[1], &sid); err != nil {
+		return []byte{}
+	}
+	return []byte(sid)
+}
+
+func NewNoticeMessage() Message {
+	mess := &NoticeMessage{&RawMessage{}}
+	mess.Push(MessageTypeNotice)
+	return mess
 }
 
 // NoticeMessage TBD
-type NoticeMessage = RawMessage
+type NoticeMessage struct {
+	*RawMessage
+}
 
-// NewNoticeMessage TBD
-func NewNoticeMessage(notice string) Message {
-	mess := NoticeMessage{}
-	mess.Push(MessageTypeNotice)
-	mess.Push(notice)
+func NewOkMessage() Message {
+	mess := &OkMessage{}
+	mess.Push(MessageTypeOk)
 	return mess
 }
 
 // OkMessage TBD
-type OkMessage = RawMessage
+type OkMessage struct {
+	*RawMessage
+}
 
-// NewOkMessage TBD
-func NewOkMessage(eventID string, isSaved bool, message string) Message {
-	mess := OkMessage{}
-	mess.Push(MessageTypeOk)
-	mess.Push(eventID)
-	mess.Push(isSaved)
-	mess.Push(message)
+func NewRequestMessage(sid string, filters ...*Filter) Message {
+	mess := &RequestMessage{&RawMessage{}}
+	mess.Push(MessageTypeRequest)
+	mess.Push(sid)
+	for _, f := range filters {
+		mess.Push(f)
+	}
 	return mess
 }
 
 // RequestMessage TBD
-type RequestMessage = RawMessage
+type RequestMessage struct {
+	*RawMessage
+}
 
-// NewRequestMessage TBD
-func NewRequestMessage(subscriptionID string, filter *Filter) Message {
-	mess := RequestMessage{}
-	mess.Push(MessageTypeRequest)
-	mess.Push(subscriptionID)
-	mess.Push(filter)
-	return mess
+// SubscriptionID TBD
+func (m *RequestMessage) SubscriptionID() []byte {
+	if len(*m.RawMessage) < 2 {
+		return []byte{}
+	}
+	var sid string
+	if err := json.Unmarshal((*m.RawMessage)[1], &sid); err != nil {
+		return []byte{}
+	}
+	return []byte(sid)
 }

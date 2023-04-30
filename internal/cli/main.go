@@ -45,10 +45,7 @@ func main() {
 		ch <- mess
 	})
 	cl.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
-		if eventMess, ok := mess.(*nostr.EventMessage); ok {
-			fmt.Printf("%s", eventMess.Event().Content())
-		}
-		// fmt.Printf("%v", mess)
+		ch <- mess
 	})
 	cl.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
 		ch <- mess
@@ -68,12 +65,18 @@ func main() {
 
 	fmt.Printf(" Connected!\n")
 
-	go cl.Publish(nostr.NewRequestMessage("asdf-2134", &nostr.Filter{}))
+	mess := nostr.NewRequestMessage("asdf-1234", &nostr.Filter{})
+	byt, _ := mess.Marshal()
+	fmt.Printf("%s", byt)
+	go cl.Publish(mess)
 
 	for {
 		select {
-		// case mess := <-ch:
-		// 	fmt.Println(mess.Type())
+		case mess := <-ch:
+			if string(mess.Type()) == nostr.MessageTypeEvent {
+				eventMess := &nostr.EventMessage{RawMessage: mess.(*nostr.RawMessage)}
+				fmt.Printf("\nFrom: %s\n\n%s\n\n\n", eventMess.Event().PublicKey(), eventMess.Event().Content())
+			}
 		case <-ctx.Done():
 			return
 		}
