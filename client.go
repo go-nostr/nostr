@@ -9,7 +9,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// NewClient TBD
+// NewClient TODO
 func NewClient(opt *ClientOptions) *Client {
 	return &Client{
 		ClientOptions: opt,
@@ -20,10 +20,10 @@ func NewClient(opt *ClientOptions) *Client {
 	}
 }
 
-// ClientOptions TBD
+// ClientOptions TODO
 type ClientOptions struct{}
 
-// Client TBD
+// Client TODO
 type Client struct {
 	*ClientOptions
 
@@ -33,17 +33,17 @@ type Client struct {
 	mu           sync.Mutex
 }
 
-// HandleMessage TBD
+// HandleMessage TODO
 func (cl *Client) HandleMessage(typ string, handler MessageHandler) {
 	cl.messHandlers[typ] = handler
 }
 
-// HandleMessageFunc TBD
+// HandleMessageFunc TODO
 func (cl *Client) HandleMessageFunc(typ string, handler func(mess Message)) {
 	cl.messHandlers[typ] = MessageHandlerFunc(handler)
 }
 
-// Publish TBD
+// Publish TODO
 func (cl *Client) Publish(mess Message) error {
 	ctx := context.Background()
 	data, err := mess.Marshal()
@@ -60,7 +60,7 @@ func (cl *Client) Publish(mess Message) error {
 	return nil
 }
 
-// Subscribe TBD
+// Subscribe TODO
 func (cl *Client) Subscribe(ctx context.Context, u string) error {
 	conn, _, err := websocket.Dial(ctx, u, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
@@ -77,14 +77,14 @@ func (cl *Client) Subscribe(ctx context.Context, u string) error {
 	return nil
 }
 
-// addConn TBD
+// addConn TODO
 func (cl *Client) addConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.conns[conn] = struct{}{}
 }
 
-// listenConn TBD
+// listenConn TODO
 func (cl *Client) listenConn(conn *websocket.Conn) {
 	ctx := context.Background()
 	defer cl.removeConn(conn)
@@ -110,7 +110,7 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 	}
 }
 
-// removeConn TBD
+// removeConn TODO
 func (cl *Client) removeConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()

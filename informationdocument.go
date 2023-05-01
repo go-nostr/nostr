@@ -1,6 +1,6 @@
 package nostr
 
-// InformationDocument TBD
+// InformationDocument contains information about a Nostr relay.
 type InformationDocument struct {
 	Name           []byte       `json:"name,omitempty"`
 	Description    []byte       `json:"description,omitempty"`

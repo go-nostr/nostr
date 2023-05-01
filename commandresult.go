@@ -1,6 +1,6 @@
 package nostr
 
-// CommandResult TBD
+// CommandResult TODO
 type CommandResult struct {
 	Status  []byte `json:"status,omitempty"`
 	EventID []byte `json:"event_id,omitempty"`
