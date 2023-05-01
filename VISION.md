@@ -254,7 +254,29 @@ TBD
 
 ### Software System Attributes
 
-TBD
+#### Messages
+
+```mermaid
+erDiagram
+    MessageHandler ||--|| Message : "handles"
+    Message ||--o{ RawMessage : "implements"
+    Message ||--o{ AuthMessage : "implements"
+    Message ||--o{ CloseMessage : "implements"
+    Message ||--o{ CountMessage : "implements"
+    Message ||--o{ EOSEMessage : "implements"
+    Message ||--o{ EventMessage : "implements"
+    Message ||--o{ NoticeMessage : "implements"
+    Message ||--o{ OkMessage : "implements"
+    Message ||--o{ RequestMessage : "implements"
+    RawMessage ||--|{ AuthMessage : "extends"
+    RawMessage ||--|{ CloseMessage : "extends"
+    RawMessage ||--|{ CountMessage : "extends"
+    RawMessage ||--|{ EOSEMessage : "extends"
+    RawMessage ||--|{ EventMessage : "extends"
+    RawMessage ||--|{ NoticeMessage : "extends"
+    RawMessage ||--|{ OkMessage : "extends"
+    RawMessage ||--|{ RequestMessage : "extends"
+```
 
 ### Other Requirements
 
