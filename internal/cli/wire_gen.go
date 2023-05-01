@@ -38,6 +38,11 @@ func buildNoticeCommand() *command.NoticeCommand {
 	return noticeCommand
 }
 
+func buildOkCommand() *command.OkCommand {
+	okCommand := command.NewOkCommand()
+	return okCommand
+}
+
 func buildRequestCommand() *command.RequestCommand {
 	client := buildClient()
 	requestCommand := command.NewRequestCommand(client)

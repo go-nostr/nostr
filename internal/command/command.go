@@ -91,6 +91,17 @@ type NoticeCommand struct {
 	*BaseCommand
 }
 
+func NewOkCommand() *OkCommand {
+	cmd := &OkCommand{&BaseCommand{
+		fs: flag.NewFlagSet("ok", flag.ContinueOnError),
+	}}
+	return cmd
+}
+
+type OkCommand struct {
+	*BaseCommand
+}
+
 func NewEventCommand() *EventCommand {
 	cmd := &EventCommand{&BaseCommand{
 		fs: flag.NewFlagSet("event", flag.ContinueOnError),

@@ -47,6 +47,13 @@ func buildNoticeCommand() *command.NoticeCommand {
 		command.NewNoticeCommand,
 	)
 	return &command.NoticeCommand{}
+}
+
+func buildOkCommand() *command.OkCommand {
+	wire.Build(
+		command.NewOkCommand,
+	)
+	return &command.OkCommand{}
 
 }
 
