@@ -9,7 +9,7 @@ import (
 )
 
 func usageFunc() {
-	fmt.Printf("go-nostr: manage and communicate with Nostr protocol for decentralized social media.\n" +
+	fmt.Printf("go-nostr is a tool for communicating over the Nostr protocol.\n" +
 		"\n" +
 		"Usage:\n" +
 		"\n" +
@@ -38,7 +38,6 @@ func main() {
 	if len(os.Args[1:]) < 1 {
 		flag.Usage()
 		os.Exit(0)
-		return
 	}
 	cmds := map[string]command.Command{
 		"auth":   buildAuthCommand(),
@@ -52,7 +51,7 @@ func main() {
 	name := os.Args[1]
 	if cmds[name] == nil {
 		flag.Usage()
-		return
+		os.Exit(0)
 	}
 	cmds[name].Init(os.Args[2:])
 	cmds[name].Run()
