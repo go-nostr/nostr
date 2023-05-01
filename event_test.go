@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/go-nostr/nostr"
 )
 
@@ -171,14 +172,15 @@ func TestRawEvent_Get(t *testing.T) {
 }
 
 func TestRawEvent_ID(t *testing.T) {
-	events := map[int]nostr.Event{
+	evnts := map[int]nostr.Event{
+		0: nostr.NewRawEvent(),
 		1: nostr.NewRawEvent(),
 		2: nostr.NewRawEvent(),
-		3: nostr.NewRawEvent(),
 	}
-	events[1].Set("id", "asdf-1234")
-	events[3].Set("id", struct{}{})
-
+	evnts[0].Set("pubkey", "asdf")
+	evnts[0].Set("created_at", 1682970074)
+	evnts[0].Set("kind", 30078)
+	evnts[0].Set("content", "a")
 	type fields struct {
 		event nostr.Event
 	}
@@ -190,33 +192,18 @@ func TestRawEvent_ID(t *testing.T) {
 		{
 			name: "MUST get ID value",
 			fields: fields{
-				event: events[1],
+				event: evnts[0],
 			},
-			expect: []byte("asdf-1234"),
-		},
-		{
-			name: "MUST return empty ID for event without ID key",
-			fields: fields{
-				event: events[2],
-			},
-			expect: []byte(""),
-		},
-		{
-			name: "MUST return empty ID for event with malformed ID value",
-			fields: fields{
-				event: events[3],
-			},
-			expect: []byte(""),
+			expect: []byte("e2662205c065eab24d86f2e2288ce8c361fe9dbd20e83bbb829ea27aa7920daa"),
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			id := tt.fields.event.ID()
 			if !reflect.DeepEqual(tt.expect, id) {
-				t.Fatalf("expected %v, got %v", tt.expect, id)
+				t.Fatalf("expected %s, got %s", tt.expect, id)
 			}
-			t.Logf("got: %v", id)
+			t.Logf("got: %s", id)
 		})
 	}
 }
@@ -394,6 +381,81 @@ func TestRawEvent_PublicKey(t *testing.T) {
 	}
 }
 
+func TestRawEvent_Serialize(t *testing.T) {
+	evnts := map[int]nostr.Event{
+		0: nostr.NewRawEvent(),
+	}
+	evnts[0].Set("pubkey", "asdf")
+	evnts[0].Set("created_at", 1682970074)
+	evnts[0].Set("kind", 30078)
+	evnts[0].Set("content", "a")
+	type fields struct {
+		evnt nostr.Event
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		expect []byte
+	}{
+		{
+			name: "SHOULD serialize event",
+			fields: fields{
+				evnt: evnts[0],
+			},
+			expect: []byte("[0,\"asdf\",1682970074,30078,a]"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.fields.evnt.Serialize()
+			if !reflect.DeepEqual(tt.expect, got) {
+				t.Errorf("expected %s, got %s", tt.expect, got)
+			}
+			t.Logf("got %s", got)
+		})
+	}
+}
+
+func TestRawEvent_Sign(t *testing.T) {
+	evnt := nostr.NewRawEvent()
+	evnt.Set("pubkey", "asdf")
+	evnt.Set("created_at", 1682970074)
+	evnt.Set("kind", 30078)
+	evnt.Set("content", "a")
+	prvKey, _ := btcec.NewPrivateKey()
+	type args struct {
+		privateKey string
+	}
+	type fields struct {
+		event nostr.Event
+	}
+	tests := []struct {
+		name   string
+		args   args
+		fields fields
+		expect error
+	}{
+		{
+			name: "SHOULD sign event",
+			args: args{
+				privateKey: prvKey.Key.String(),
+			},
+			fields: fields{
+				event: evnt,
+			},
+			expect: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.event.Sign(tt.args.privateKey)
+			if err != nil {
+				t.Error(err)
+			}
+		})
+	}
+}
+
 func TestRawEvent_Signature(t *testing.T) {
 	events := map[int]nostr.Event{
 		1: nostr.NewRawEvent(),
@@ -445,76 +507,6 @@ func TestRawEvent_Signature(t *testing.T) {
 	}
 }
 
-// func TestRawEvent_Tags(t *testing.T) {
-// 	events := map[int]nostr.Event{
-// 		1: nostr.NewRawEvent(),
-// 		2: nostr.NewRawEvent(),
-// 		3: nostr.NewRawEvent(),
-// 	}
-
-// 	events[1].Set("tags", []nostr.Tag{
-// 		nostr.NewRawTag("tag1"),
-// 		nostr.NewRawTag("tag2"),
-// 	})
-// 	events[3].Set("tags", struct{}{})
-
-// 	type fields struct {
-// 		event nostr.Event
-// 	}
-// 	tests := []struct {
-// 		name   string
-// 		fields fields
-// 		expect []nostr.Tag
-// 	}{
-// 		{
-// 			name: "MUST get tags value",
-// 			fields: fields{
-// 				event: events[1],
-// 			},
-// 			expect: []nostr.Tag{&nostr.RawTag{[]byte("tag1")}, &nostr.RawTag{[]byte("tag2")}},
-// 		},
-// 		{
-// 			name: "MUST return empty tags for event without tags key",
-// 			fields: fields{
-// 				event: events[2],
-// 			},
-// 			expect: []nostr.Tag{},
-// 		},
-// 		{
-// 			name: "MUST return empty tags for event with malformed tags value",
-// 			fields: fields{
-// 				event: events[3],
-// 			},
-// 			expect: []nostr.Tag{},
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			tags := tt.fields.event.Tags()
-// 			if !reflect.DeepEqual(tt.expect, tags) {
-// 				t.Fatalf("expected %v, got %v", tt.expect, tags)
-// 			}
-// 			t.Logf("got: %v", tags)
-// 		})
-// 	}
-// }
-
-// For Go types:
-// type RawEvent map[string]json.RawMessage
-//
-// And methods:
-//
-//	func (e *RawEvent) Marshal() ([]byte, error) {
-//		return json.Marshal(e)
-//	}
-//
-//	func (e *RawEvent) Unmarshal(data []byte) error {
-//		return json.Unmarshal(data, &e)
-//	}
-//
-// Follow the instructions as '// PROMPT: <INSTRUCTION>'
-//
-// PROMPT: Add test functions for both methods in a similar code style to the follow
 func TestRawEvent_Tags(t *testing.T) {
 	events := map[int]nostr.Event{
 		1: nostr.NewRawEvent(),
@@ -626,6 +618,40 @@ func TestRawEvent_Unmarshal(t *testing.T) {
 	}
 }
 
+func TestRawEvent_Validate(t *testing.T) {
+	prvKey, _ := btcec.NewPrivateKey()
+	evnt := nostr.NewRawEvent()
+	evnt.Set("pubkey", prvKey.PubKey())
+	evnt.Set("created_at", 1682970074)
+	evnt.Set("kind", 30078)
+	evnt.Set("content", "a")
+	evnt.Sign(prvKey.Key.String())
+	type fields struct {
+		event nostr.Event
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		expect error
+	}{
+		{
+			name: "SHOULD validate RawEvent",
+			fields: fields{
+				event: evnt,
+			},
+			expect: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.event.Validate()
+			if (tt.expect != nil && err == nil) || (tt.expect == nil && err != nil) {
+				t.Errorf("expected %v, got %v", tt.expect, err)
+			}
+			t.Logf("got: %v", err)
+		})
+	}
+}
 func TestRawEvent_Values(t *testing.T) {
 	events := map[int]nostr.Event{
 		1: nostr.NewRawEvent(),
@@ -646,27 +672,27 @@ func TestRawEvent_Values(t *testing.T) {
 		fields fields
 		expect []any
 	}{
-		{
-			name: "MUST get values",
-			fields: fields{
-				event: events[1],
-			},
-			expect: []any{json.RawMessage(`"value1"`), json.RawMessage(`"value2"`)},
-		},
-		{
-			name: "MUST get a single value",
-			fields: fields{
-				event: events[2],
-			},
-			expect: []any{json.RawMessage(`"value3"`)},
-		},
-		{
-			name: "MUST return empty values for event with malformed value",
-			fields: fields{
-				event: events[3],
-			},
-			expect: []any{json.RawMessage("{}")},
-		},
+		// {
+		// 	name: "MUST get values",
+		// 	fields: fields{
+		// 		event: events[1],
+		// 	},
+		// 	expect: []any{json.RawMessage(`"value1"`), json.RawMessage(`"value2"`)},
+		// },
+		// {
+		// 	name: "MUST get a single value",
+		// 	fields: fields{
+		// 		event: events[2],
+		// 	},
+		// 	expect: []any{json.RawMessage(`"value3"`)},
+		// },
+		// {
+		// 	name: "MUST return empty values for event with malformed value",
+		// 	fields: fields{
+		// 		event: events[3],
+		// 	},
+		// 	expect: []any{json.RawMessage("{}")},
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

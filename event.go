@@ -1,7 +1,13 @@
 package nostr
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 )
 
 // EventKind constants represent the different kinds of events that can be
@@ -43,17 +49,20 @@ const (
 // handle various kinds of events.
 type Event interface {
 	Content() []byte
+	CreatedAt() int
 	Get(key string) any
 	ID() []byte
 	Keys() []string
 	Kind() int
 	Marshal() ([]byte, error)
 	PublicKey() []byte
+	Serialize() []byte
 	Set(key string, val any) error
-	Sign() error
+	Sign(prvKey string) error
 	Signature() []byte
 	Tags() []Tag
 	Unmarshal(data []byte) error
+	Validate() error
 	Values() []any
 }
 
@@ -75,6 +84,15 @@ func (e *RawEvent) Content() []byte {
 	return []byte(content)
 }
 
+// CreatedAt TBD
+func (e *RawEvent) CreatedAt() int {
+	var createdAt int
+	if err := json.Unmarshal((*e)["created_at"], &createdAt); err != nil {
+		return -1
+	}
+	return createdAt
+}
+
 // Get retrieves the value associated with the given key from the RawEvent.
 func (e *RawEvent) Get(key string) any {
 	var val any
@@ -86,11 +104,8 @@ func (e *RawEvent) Get(key string) any {
 
 // ID retrieves the ID of the RawEvent as a byte slice.
 func (e *RawEvent) ID() []byte {
-	var id string
-	if err := json.Unmarshal((*e)["id"], &id); err != nil {
-		return []byte{}
-	}
-	return []byte(id)
+	h := sha256.Sum256(e.Serialize())
+	return []byte(hex.EncodeToString(h[:]))
 }
 
 // Keys returns a list of keys in the RawEvent.
@@ -120,6 +135,28 @@ func (e *RawEvent) PublicKey() []byte {
 	return []byte(pubKey)
 }
 
+// Serialize TBD
+func (e *RawEvent) Serialize() []byte {
+	// TODO: clean-up
+	args := make([]byte, 0)
+	args = append(args, []byte(
+		fmt.Sprintf(
+			"[0,\"%s\",%d,%d,",
+			e.PublicKey(),
+			e.CreatedAt(),
+			e.Kind(),
+		),
+	)...)
+	tags := e.Tags()
+	for _, t := range tags {
+		data, _ := t.Marshal()
+		args = append(args, data...)
+	}
+	args = append(args, e.Content()...)
+	args = append(args, ']')
+	return args
+}
+
 // Set associates a value with a given key in the RawEvent.
 func (e *RawEvent) Set(key string, val any) error {
 	data, err := json.Marshal(val)
@@ -140,8 +177,21 @@ func (e *RawEvent) Signature() []byte {
 }
 
 // Sign signs the RawEvent.
-func (e *RawEvent) Sign() error {
-	// TODO
+func (e *RawEvent) Sign(privateKey string) error {
+	s, err := hex.DecodeString(privateKey)
+	if err != nil {
+		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, err)
+	}
+	prvKey, pubKey := btcec.PrivKeyFromBytes(s)
+	pubKeyByt := pubKey.SerializeCompressed()
+	e.Set("pubkey", hex.EncodeToString(pubKeyByt[1:]))
+	h := sha256.Sum256(e.Serialize())
+	sig, err := schnorr.Sign(prvKey, h[:])
+	if err != nil {
+		return err
+	}
+	e.Set("id", hex.EncodeToString(h[:]))
+	e.Set("sig", hex.EncodeToString(sig.Serialize()))
 	return nil
 }
 
@@ -174,6 +224,26 @@ func (e *RawEvent) Unmarshal(data []byte) error {
 
 // Validate validates the RawEvent.
 func (e *RawEvent) Validate() error {
+	pubKeyHex, err := hex.DecodeString(string(e.PublicKey()))
+	if err != nil {
+		return fmt.Errorf("event pubkey '%s' is invalid hex: %w", e.PublicKey(), err)
+	}
+	pubKey, err := schnorr.ParsePubKey(pubKeyHex)
+	if err != nil {
+		return fmt.Errorf("event has invalid pubkey '%s': %w", e.PublicKey(), err)
+	}
+	sigStr, err := hex.DecodeString(string(e.Signature()))
+	if err != nil {
+		return fmt.Errorf("signature '%s' is invalid hex: %w", e.Signature(), err)
+	}
+	sig, err := schnorr.ParseSignature(sigStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse signature: %w", err)
+	}
+	hash := sha256.Sum256(e.Serialize())
+	if !sig.Verify(hash[:], pubKey) {
+		return fmt.Errorf("")
+	}
 	return nil
 }
 
