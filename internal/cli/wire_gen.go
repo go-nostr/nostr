@@ -5,3 +5,52 @@
 // +build !wireinject
 
 package main
+
+import (
+	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/internal/command"
+)
+
+// Injectors from wire.go:
+
+func buildAuthCommand() *command.AuthCommand {
+	authCommand := command.NewAuthCommand()
+	return authCommand
+}
+
+func buildCountCommand() *command.CountCommand {
+	countCommand := command.NewCountCommand()
+	return countCommand
+}
+
+func buildCloseCommand() *command.CloseCommand {
+	closeCommand := command.NewCloseCommand()
+	return closeCommand
+}
+
+func buildEventCommand() *command.EventCommand {
+	eventCommand := command.NewEventCommand()
+	return eventCommand
+}
+
+func buildNoticeCommand() *command.NoticeCommand {
+	noticeCommand := command.NewNoticeCommand()
+	return noticeCommand
+}
+
+func buildOkCommand() *command.OkCommand {
+	okCommand := command.NewOkCommand()
+	return okCommand
+}
+
+func buildRequestCommand() *command.RequestCommand {
+	client := buildClient()
+	requestCommand := command.NewRequestCommand(client)
+	return requestCommand
+}
+
+// wire.go:
+
+func buildClient() *nostr.Client {
+	return nostr.NewClient(nil)
+}

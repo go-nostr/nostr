@@ -1,84 +1,59 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"strings"
+	"os"
 
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/internal/command"
 )
 
-const (
-	CommandTypeHelp    = "help"
-	CommandTypePublish = "publish"
-)
-
-type relaySlice []string
-
-func (rs *relaySlice) String() string {
-	return strings.Join(*rs, ",")
+func usageFunc() {
+	fmt.Printf("go-nostr: manage and communicate with Nostr protocol for decentralized social media.\n" +
+		"\n" +
+		"Usage:\n" +
+		"\n" +
+		"\tnostr [command] [options]\n" +
+		"\n" +
+		"The commands are:\n" +
+		"\n" +
+		"\tauth\tused to send authentication events\n" +
+		"\tclose\tused to stop previous subscriptions\n" +
+		"\tcount\tused to request event counts\n" +
+		"\tevent\tused to publish events\n" +
+		"\tnotice\tused to send human-readable messages to clients\n" +
+		"\tok\tused to notify clients if an EVENT was successful\n" +
+		"\treq\tused to request events and subscribe to new updates\n" +
+		"\n" +
+		"Use \"nostr help <command>\" for more information about a command.\n" +
+		"\n",
+	)
 }
-
-func (rs *relaySlice) Set(u string) error {
-	*rs = append(*rs, u)
-	return nil
-}
-
-var (
-	data   string     = "[]"
-	relays relaySlice = make(relaySlice, 0)
-)
 
 func init() {
-	flag.StringVar(&data, "d", data, "")
-	flag.Var(&relays, "r", "")
+	flag.Usage = usageFunc
 }
 
 func main() {
-	flag.Parse()
-
-	ch := make(chan nostr.Message)
-	cl := nostr.NewClient(nil)
-
-	cl.HandleMessageFunc(nostr.MessageTypeEOSE, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
-		ch <- mess
-	})
-	cl.HandleMessageFunc(nostr.MessageTypeRequest, func(mess nostr.Message) {
-		ch <- mess
-	})
-
-	ctx := context.Background()
-
-	for _, u := range relays {
-		fmt.Printf("Connecting... (%s)", u)
-		if err := cl.Subscribe(ctx, u); err != nil {
-			panic(err)
-		}
+	if len(os.Args[1:]) < 1 {
+		flag.Usage()
+		os.Exit(0)
+		return
 	}
-
-	fmt.Printf(" Connected!\n")
-
-	mess := nostr.NewRequestMessage("asdf-1234", &nostr.Filter{})
-	byt, _ := mess.Marshal()
-	fmt.Printf("%s", byt)
-	go cl.Publish(mess)
-
-	for {
-		select {
-		case mess := <-ch:
-			if string(mess.Type()) == nostr.MessageTypeEvent {
-				eventMess := &nostr.EventMessage{RawMessage: mess.(*nostr.RawMessage)}
-				fmt.Printf("\nFrom: %s\n\n%s\n\n\n", eventMess.Event().PublicKey(), eventMess.Event().Content())
-			}
-		case <-ctx.Done():
-			return
-		}
+	cmds := map[string]command.Command{
+		"auth":   buildAuthCommand(),
+		"close":  buildCloseCommand(),
+		"count":  buildCountCommand(),
+		"notice": buildNoticeCommand(),
+		"ok":     buildOkCommand(),
+		"event":  buildEventCommand(),
+		"req":    buildRequestCommand(),
 	}
+	name := os.Args[1]
+	if cmds[name] == nil {
+		flag.Usage()
+		return
+	}
+	cmds[name].Init(os.Args[2:])
+	cmds[name].Run()
 }
