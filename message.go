@@ -152,6 +152,18 @@ type EOSEMessage struct {
 	*RawMessage
 }
 
+// SubscriptionID returns the subscription ID contained in the RequestMessage.
+func (m *EOSEMessage) SubscriptionID() []byte {
+	if len(*m.RawMessage) < 2 {
+		return []byte{}
+	}
+	var sid string
+	if err := json.Unmarshal((*m.RawMessage)[1], &sid); err != nil {
+		return []byte{}
+	}
+	return []byte(sid)
+}
+
 // NewEventMessage creates a new EventMessage.
 func NewEventMessage() Message {
 	mess := &EventMessage{&RawMessage{}}
