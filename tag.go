@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// Constants representing different tag types.
 const (
 	TagTypeAmount      = "amount"          // TagTypeAmount represents millisats.
 	TagTypeBadgeDesc   = "description"     // TagTypeBadgeDesc represents a badge description.
@@ -45,22 +46,22 @@ type Tag interface {
 	Values() []any
 }
 
-// NewRawTag
+// NewRawTag creates a new RawTag with the given type.
 func NewRawTag(typ string) Tag {
 	tag := &RawTag{}
 	tag.Push(typ)
 	return tag
 }
 
-// RawTag TBD
+// RawTag is a raw representation of a Tag as a slice of json.RawMessage.
 type RawTag []json.RawMessage
 
-// Marshal TBD
+// Marshal marshals the RawTag into a JSON byte slice.
 func (t *RawTag) Marshal() ([]byte, error) {
 	return json.Marshal(t)
 }
 
-// Push TBD
+// Push appends a value to the RawTag after marshaling it into a JSON RawMessage.
 func (t *RawTag) Push(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -70,7 +71,7 @@ func (t *RawTag) Push(v any) error {
 	return nil
 }
 
-// Type TBD
+// Type returns the type of the RawTag.
 func (t *RawTag) Type() string {
 	if len(*t) < 1 {
 		return ""
@@ -82,12 +83,12 @@ func (t *RawTag) Type() string {
 	return typ
 }
 
-// Unmarshal TBD
+// Unmarshal unmarshals a JSON byte slice into a RawTag.
 func (t *RawTag) Unmarshal(data []byte) error {
 	return json.Unmarshal(data, t)
 }
 
-// Values TBD
+// Values returns the values of the RawTag as a slice of any.
 func (t *RawTag) Values() []any {
 	var vals []any
 	for _, arg := range *t {

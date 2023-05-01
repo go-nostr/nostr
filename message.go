@@ -23,15 +23,15 @@ const (
 	MessageTypeRequest = "REQ"
 )
 
-// MessageHandlerFunc TBD
+// MessageHandlerFunc is a function type that takes a Message as a parameter.
 type MessageHandlerFunc func(mess Message)
 
-// Handle TBD
+// Handle calls the MessageHandlerFunc with the provided Message.
 func (f MessageHandlerFunc) Handle(mess Message) {
 	f(mess)
 }
 
-// MessageHandler TBD
+// MessageHandler is an interface for handling Message types.
 type MessageHandler interface {
 	Handle(mess Message)
 }
@@ -45,22 +45,22 @@ type Message interface {
 	Values() []any
 }
 
-// NewRawMessage
+// NewRawMessage creates a new RawMessage with the provided type.
 func NewRawMessage(typ string) Message {
 	mess := &RawMessage{}
 	mess.Push(typ)
 	return mess
 }
 
-// RawMessage TBD
+// RawMessage is a raw representation of a Message as a slice of json.RawMessage.
 type RawMessage []json.RawMessage
 
-// Marshal TBD
+// Marshal marshals the RawMessage into a JSON byte slice.
 func (m *RawMessage) Marshal() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// Push TBD
+// Push appends a value to the RawMessage after marshaling it into a JSON RawMessage.
 func (m *RawMessage) Push(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -70,7 +70,7 @@ func (m *RawMessage) Push(v any) error {
 	return nil
 }
 
-// Type TBD
+// Type returns the type of the RawMessage.
 func (m *RawMessage) Type() []byte {
 	if len(*m) < 1 {
 		return []byte{}
@@ -82,12 +82,12 @@ func (m *RawMessage) Type() []byte {
 	return []byte(typ)
 }
 
-// Unmarshal TBD
+// Unmarshal unmarshals a JSON byte slice into a RawMessage.
 func (m *RawMessage) Unmarshal(data []byte) error {
 	return json.Unmarshal(data, m)
 }
 
-// Values TBD
+// Values returns the values of the RawMessage as a slice of any.
 func (m *RawMessage) Values() []any {
 	var vals []any
 	for _, arg := range *m {
@@ -98,6 +98,7 @@ func (m *RawMessage) Values() []any {
 	return vals
 }
 
+// NewAuthMessage creates a new AuthMessage with the provided challenge and event.
 func NewAuthMessage(challenge string, event *Event) Message {
 	mess := &AuthMessage{&RawMessage{}}
 	mess.Push(MessageTypeAuth)
@@ -110,55 +111,72 @@ func NewAuthMessage(challenge string, event *Event) Message {
 	return mess
 }
 
-// AuthMessage TBD
+// AuthMessage is a specialized message type for authentication.
 type AuthMessage struct {
 	*RawMessage
 }
 
+// NewCloseMessage creates a new CloseMessage.
 func NewCloseMessage() Message {
 	mess := &CloseMessage{&RawMessage{}}
 	mess.Push(MessageTypeClose)
 	return mess
 }
 
-// CloseMessage TBD
+// CloseMessage is a specialized message type for closing a connection.
 type CloseMessage struct {
 	*RawMessage
 }
 
+// NewCountMessage creates a new CountMessage.
 func NewCountMessage() Message {
 	mess := &CountMessage{&RawMessage{}}
 	mess.Push(MessageTypeCount)
 	return mess
 }
 
-// CountMessage TBD
+// CountMessage is a specialized message type for counting events.
 type CountMessage struct {
 	*RawMessage
 }
 
+// NewEOSEMessage creates a new EOSEMessage.
 func NewEOSEMessage() Message {
 	mess := &EOSEMessage{&RawMessage{}}
 	mess.Push(MessageTypeEOSE)
 	return mess
 }
 
-// EOSEMessage TBD
+// EOSEMessage is a specialized message type for indicating the end of stored events.
 type EOSEMessage struct {
 	*RawMessage
 }
 
+// SubscriptionID returns the subscription ID contained in the RequestMessage.
+func (m *EOSEMessage) SubscriptionID() []byte {
+	if len(*m.RawMessage) < 2 {
+		return []byte{}
+	}
+	var sid string
+	if err := json.Unmarshal((*m.RawMessage)[1], &sid); err != nil {
+		return []byte{}
+	}
+	return []byte(sid)
+}
+
+// NewEventMessage creates a new EventMessage.
 func NewEventMessage() Message {
 	mess := &EventMessage{&RawMessage{}}
 	mess.Push(MessageTypeEvent)
 	return mess
 }
 
-// EventMessage TBD
+// EventMessage is a specialized message type for handling events.
 type EventMessage struct {
 	*RawMessage
 }
 
+// Event returns the event contained in the EventMessage.
 func (m *EventMessage) Event() Event {
 	if len(*m.RawMessage) < 3 {
 		return nil
@@ -170,6 +188,7 @@ func (m *EventMessage) Event() Event {
 	return &e
 }
 
+// SubscriptionID returns the subscription ID contained in the EventMessage.
 func (m *EventMessage) SubscriptionID() []byte {
 	if len(*m.RawMessage) < 3 {
 		return []byte{}
@@ -181,28 +200,31 @@ func (m *EventMessage) SubscriptionID() []byte {
 	return []byte(sid)
 }
 
+// NewNoticeMessage creates a new NoticeMessage.
 func NewNoticeMessage() Message {
 	mess := &NoticeMessage{&RawMessage{}}
 	mess.Push(MessageTypeNotice)
 	return mess
 }
 
-// NoticeMessage TBD
+// NoticeMessage is a specialized message type for sending notifications.
 type NoticeMessage struct {
 	*RawMessage
 }
 
+// NewOkMessage creates a new OkMessage.
 func NewOkMessage() Message {
 	mess := &OkMessage{}
 	mess.Push(MessageTypeOk)
 	return mess
 }
 
-// OkMessage TBD
+// OkMessage is a specialized message type for indicating success or confirmation.
 type OkMessage struct {
 	*RawMessage
 }
 
+// NewRequestMessage creates a new RequestMessage with the provided subscription ID and filters.
 func NewRequestMessage(sid string, filters ...*Filter) Message {
 	mess := &RequestMessage{&RawMessage{}}
 	mess.Push(MessageTypeRequest)
@@ -213,12 +235,12 @@ func NewRequestMessage(sid string, filters ...*Filter) Message {
 	return mess
 }
 
-// RequestMessage TBD
+// RequestMessage is a specialized message type for making requests.
 type RequestMessage struct {
 	*RawMessage
 }
 
-// SubscriptionID TBD
+// SubscriptionID returns the subscription ID contained in the RequestMessage.
 func (m *RequestMessage) SubscriptionID() []byte {
 	if len(*m.RawMessage) < 2 {
 		return []byte{}
