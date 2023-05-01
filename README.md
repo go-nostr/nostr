@@ -4,6 +4,12 @@
 
 Please be aware that the code and documentation may contain unfinished features or inconsistencies. We appreciate your interest in the project and encourage you to check back for updates on progress towards a stable release.
 
+Roadmap:
+
+- [ ] `nostr` core package for use by external applications and executable
+- [ ] `internal/cli` command-line client interface for Nostr client
+- [ ] `internal/cmd` relay server with persistent data repositories
+
 ## Overview
 
 All-in-one Angular/Go/Hugo monorepo for the Nostr protocol, featuring comprehensive documentation, an all-in-one Go executable and reusable packages with an Angular web client.
