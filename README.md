@@ -9,6 +9,8 @@ Roadmap:
 - [ ] `nostr` core package for use by external applications and executable
 - [ ] `internal/cli` command-line client interface for Nostr client
 - [ ] `internal/cmd` relay server with persistent data repositories
+- [ ] `internal/docs` documentation site built with Hugo
+- [ ] `internal/web` web client and relay administrator interface built with Angular
 
 ## Overview
 
