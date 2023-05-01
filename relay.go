@@ -11,7 +11,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// New TBD
+// NewRelay creates and initializes a new Relay instance with the given RelayOptions.
 func NewRelay(opt *RelayOptions) *Relay {
 	rl := &Relay{
 		RelayOptions: opt,
@@ -24,6 +24,7 @@ func NewRelay(opt *RelayOptions) *Relay {
 	return rl
 }
 
+// RelayOptions holds the configuration options for a Relay instance.
 type RelayOptions struct {
 	Name          string       `json:"name,omitempty"`
 	Description   string       `json:"description,omitempty"`
@@ -35,7 +36,7 @@ type RelayOptions struct {
 	Limitations   *Limitations `json:"limitations,omitempty"`
 }
 
-// Relay TBD
+// Relay represents a websocket relay server with a set of options and handlers.
 type Relay struct {
 	*RelayOptions
 
@@ -46,27 +47,27 @@ type Relay struct {
 	mu           sync.Mutex
 }
 
-// Handle TBD
+// Handle registers the handler for the given pattern.
 func (rl *Relay) Handle(pattern string, handler http.Handler) {
 	rl.serveMux.Handle(pattern, handler)
 }
 
-// HandleFunc TBD
+// HandleFunc registers the handler function for the given pattern.
 func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, r *http.Request)) {
 	rl.serveMux.HandleFunc(pattern, handler)
 }
 
-// HandleMessage TBD
+// HandleMessage registers the message handler for the given message type.
 func (rl *Relay) HandleMessage(typ string, handler MessageHandler) {
 	rl.messHandlers[typ] = handler
 }
 
-// HandleMessageFunc TBD
+// HandleMessageFunc registers the message handler function for the given message type.
 func (rl *Relay) HandleMessageFunc(typ string, handler func(mess Message)) {
 	rl.messHandlers[typ] = MessageHandlerFunc(handler)
 }
 
-// Publish TBD
+// Publish broadcasts the given message to all connected clients.
 func (rl *Relay) Publish(mess Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -82,19 +83,20 @@ func (rl *Relay) Publish(mess Message) error {
 	return nil
 }
 
-// ServeHTTP TBD
+// ServeHTTP serves the given HTTP request using the internal ServeMux.
 func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rl.serveMux.ServeHTTP(w, r)
 }
 
-// addConn TBD
+// addConn adds the given websocket connection to the set of active connections.
 func (rl *Relay) addConn(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	rl.conn[conn] = struct{}{}
 }
 
-// internetIdentifierHandlerFunc TBD
+// internetIdentifierHandlerFunc handles the /.well-known/nostr.json route.
+// It serves the public key of the relay associated with the provided name query.
 func (rl *Relay) internetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -103,7 +105,8 @@ func (rl *Relay) internetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Re
 	w.Write([]byte(fmt.Sprintf("{\"%v\":\"%v\"}", name, rl.names[name])))
 }
 
-// getConnectionHandlerFunc TBD
+// getConnectionHandlerFunc handles the root route ("/") and upgrades the
+// HTTP request to a websocket connection.
 func (rl *Relay) getConnectionHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
@@ -114,7 +117,8 @@ func (rl *Relay) getConnectionHandlerFunc(w http.ResponseWriter, r *http.Request
 	go rl.listenConn(conn)
 }
 
-// listenConn TBD
+// listenConn listens for messages on the provided websocket connection,
+// decodes them, and dispatches them to the appropriate message handler.
 func (rl *Relay) listenConn(conn *websocket.Conn) {
 	ctx := context.Background()
 	defer rl.removeConn(conn)
@@ -135,7 +139,8 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 	}
 }
 
-// removeConn TBD
+// removeConn removes the given websocket connection from the set of active connections
+// and closes the connection with a normal closure status.
 func (rl *Relay) removeConn(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()

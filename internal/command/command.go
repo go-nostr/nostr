@@ -35,7 +35,7 @@ func NewBaseCommand(name string) *BaseCommand {
 	c := &BaseCommand{
 		fs: flag.NewFlagSet(name, flag.ExitOnError),
 	}
-	c.fs.StringVar(&c.relay, "relay", "wss://nostr.wine", "Relay ...")
+	c.fs.StringVar(&c.relay, "relay", "wss://relay.damus.io", "Relay ...")
 	return c
 }
 
@@ -142,9 +142,7 @@ func (c *RequestCommand) Run() error {
 	content := make(chan []byte)
 	mess := nostr.NewRequestMessage(c.subscriptionID, &nostr.Filter{})
 	c.cl.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
-		if data, err := mess.Marshal(); err == nil {
-			content <- data
-		}
+		fmt.Printf("%s:\t\t%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
 	})
 	c.cl.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
 		if data, err := mess.Marshal(); err == nil {
