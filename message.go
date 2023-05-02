@@ -2,6 +2,7 @@ package nostr
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -38,6 +39,8 @@ type MessageHandler interface {
 
 // Message is an interface for encoding and marshaling messages.
 type Message interface {
+	json.Marshaler
+	json.Unmarshaler
 	Marshal() ([]byte, error)
 	Push(v any) error
 	Type() []byte
@@ -57,13 +60,33 @@ type RawMessage []json.RawMessage
 
 // Marshal marshals the RawMessage into a JSON byte slice.
 func (m *RawMessage) Marshal() ([]byte, error) {
-	return json.Marshal(m)
+	return m.MarshalJSON()
+}
+
+// MarshalJSON TBD
+func (m *RawMessage) MarshalJSON() ([]byte, error) {
+	byt := make([]byte, 0)
+	byt = append(byt, '[')
+	len := len(*m)
+	for i, v := range *m {
+		data, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		byt = append(byt, []byte(fmt.Sprintf("%s", data))...)
+		if i < len-1 {
+			byt = append(byt, ',')
+		}
+	}
+	byt = append(byt, ']')
+	return byt, nil
 }
 
 // Push appends a value to the RawMessage after marshaling it into a JSON RawMessage.
 func (m *RawMessage) Push(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
+		fmt.Printf("%s", err)
 		return err
 	}
 	*m = append(*m, data)
@@ -84,7 +107,17 @@ func (m *RawMessage) Type() []byte {
 
 // Unmarshal unmarshals a JSON byte slice into a RawMessage.
 func (m *RawMessage) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, m)
+	return m.UnmarshalJSON(data)
+}
+
+// UnmarshalJSON TBD
+func (m *RawMessage) UnmarshalJSON(data []byte) error {
+	mess := make([]json.RawMessage, 0)
+	if err := json.Unmarshal(data, &mess); err != nil {
+		return err
+	}
+	*m = RawMessage(mess)
+	return nil
 }
 
 // Values returns the values of the RawMessage as a slice of any.
@@ -165,9 +198,15 @@ func (m *EOSEMessage) SubscriptionID() []byte {
 }
 
 // NewEventMessage creates a new EventMessage.
-func NewEventMessage() Message {
+func NewEventMessage(sid string, evnt Event) Message {
 	mess := &EventMessage{&RawMessage{}}
 	mess.Push(MessageTypeEvent)
+	if sid != "" {
+		mess.Push(sid)
+	}
+	if evnt != nil {
+		mess.Push(evnt)
+	}
 	return mess
 }
 

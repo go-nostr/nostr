@@ -29,7 +29,8 @@ func buildCloseCommand() *command.CloseCommand {
 }
 
 func buildEventCommand() *command.EventCommand {
-	eventCommand := command.NewEventCommand()
+	client := buildClient()
+	eventCommand := command.NewEventCommand(client)
 	return eventCommand
 }
 

@@ -194,7 +194,7 @@ func TestRawEvent_ID(t *testing.T) {
 			fields: fields{
 				event: evnts[0],
 			},
-			expect: []byte("e2662205c065eab24d86f2e2288ce8c361fe9dbd20e83bbb829ea27aa7920daa"),
+			expect: []byte("5767e070aa7effa42334cf29f5f73d1d5aa93d2ca0e16e6e8905aca7f4fcc172"),
 		},
 	}
 	for _, tt := range tests {
@@ -402,7 +402,7 @@ func TestRawEvent_Serialize(t *testing.T) {
 			fields: fields{
 				evnt: evnts[0],
 			},
-			expect: []byte("[0,\"asdf\",1682970074,30078,a]"),
+			expect: []byte("[0,asdf,1682970074,30078,[],a]"),
 		},
 	}
 	for _, tt := range tests {
@@ -569,6 +569,7 @@ func TestRawEvent_Marshal(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
+		want    []byte
 		wantErr bool
 	}{
 		{
@@ -576,14 +577,18 @@ func TestRawEvent_Marshal(t *testing.T) {
 			fields: fields{
 				event: event,
 			},
+			want:    []byte("{\"id\":\"test-id\",\"tags\":[[\"tag1\"],[\"tag2\"]]}"),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := tt.fields.event.Marshal()
+			got, err := tt.fields.event.Marshal()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Marshal() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(tt.want, got) {
+				t.Errorf("want: %s, got: %s", tt.want, got)
 			}
 		})
 	}
@@ -652,6 +657,7 @@ func TestRawEvent_Validate(t *testing.T) {
 		})
 	}
 }
+
 func TestRawEvent_Values(t *testing.T) {
 	events := map[int]nostr.Event{
 		1: nostr.NewRawEvent(),
