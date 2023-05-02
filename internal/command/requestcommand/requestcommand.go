@@ -8,6 +8,9 @@ import (
 
 	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/client"
+	"github.com/go-nostr/nostr/message/eventmessage"
+	"github.com/go-nostr/nostr/message/noticemessage"
+	"github.com/go-nostr/nostr/message/okmessage"
 	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
@@ -46,15 +49,15 @@ func (c *RequestCommand) Run() error {
 	ctx := context.Background()
 	content := make(chan []byte)
 	mess := requestmessage.New(c.subscriptionID, &nostr.Filter{})
-	c.client.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(eventmessage.Type, func(mess nostr.Message) {
 		fmt.Printf("%s:\n\n%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
 	})
-	c.client.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(noticemessage.Type, func(mess nostr.Message) {
 		if data, err := mess.Marshal(); err == nil {
 			content <- data
 		}
 	})
-	c.client.HandleMessageFunc(nostr.MessageTypeOk, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(okmessage.Type, func(mess nostr.Message) {
 		if data, err := mess.Marshal(); err == nil {
 			content <- data
 		}

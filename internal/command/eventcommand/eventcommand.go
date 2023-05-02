@@ -12,6 +12,8 @@ import (
 	"github.com/go-nostr/nostr/client"
 	"github.com/go-nostr/nostr/event/shorttextnote"
 	"github.com/go-nostr/nostr/message/eventmessage"
+	"github.com/go-nostr/nostr/message/noticemessage"
+	"github.com/go-nostr/nostr/message/okmessage"
 )
 
 func New(opt *Options) *EventCommand {
@@ -50,13 +52,13 @@ func (c *EventCommand) Name() string {
 func (c *EventCommand) Run() error {
 	ctx := context.Background()
 	messChan := make(chan nostr.Message)
-	c.client.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(eventmessage.Type, func(mess nostr.Message) {
 		messChan <- mess
 	})
-	c.client.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(noticemessage.Type, func(mess nostr.Message) {
 		messChan <- mess
 	})
-	c.client.HandleMessageFunc(nostr.MessageTypeOk, func(mess nostr.Message) {
+	c.client.HandleMessageFunc(okmessage.Type, func(mess nostr.Message) {
 		messChan <- mess
 	})
 	if err := c.client.Subscribe(ctx, c.relay); err != nil {
