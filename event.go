@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
@@ -48,6 +49,8 @@ const (
 // Event represents an abstract event interface that can be extended to
 // handle various kinds of events.
 type Event interface {
+	json.Marshaler
+	json.Unmarshaler
 	Content() []byte
 	CreatedAt() int
 	Get(key string) any
@@ -58,7 +61,7 @@ type Event interface {
 	PublicKey() []byte
 	Serialize() []byte
 	Set(key string, val any) error
-	Sign(prvKey string) error
+	Sign(privateKey string) error
 	Signature() []byte
 	Tags() []Tag
 	Unmarshal(data []byte) error
@@ -126,6 +129,30 @@ func (e *RawEvent) Kind() int {
 	return kind
 }
 
+// Marshal marshals the RawEvent to a byte slice.
+func (e *RawEvent) Marshal() ([]byte, error) {
+	return e.MarshalJSON()
+}
+
+// MarshalJSON marshals the RawEvent to a byte slice.
+func (e *RawEvent) MarshalJSON() ([]byte, error) {
+	byt := make([]byte, 0)
+	byt = append(byt, '{')
+	len := len(e.Keys())
+	for i, k := range e.Keys() {
+		data, err := json.Marshal((*e)[k])
+		if err != nil {
+			return nil, err
+		}
+		byt = append(byt, []byte(fmt.Sprintf("\"%s\":%s", k, data))...)
+		if i < len-1 {
+			byt = append(byt, ',')
+		}
+	}
+	byt = append(byt, '}')
+	return byt, nil
+}
+
 // PublicKey retrieves the public key of the RawEvent as a byte slice.
 func (e *RawEvent) PublicKey() []byte {
 	var pubKey string
@@ -137,24 +164,21 @@ func (e *RawEvent) PublicKey() []byte {
 
 // Serialize TBD
 func (e *RawEvent) Serialize() []byte {
-	// TODO: clean-up
-	args := make([]byte, 0)
-	args = append(args, []byte(
-		fmt.Sprintf(
-			"[0,\"%s\",%d,%d,",
-			e.PublicKey(),
-			e.CreatedAt(),
-			e.Kind(),
-		),
-	)...)
-	tags := e.Tags()
-	for _, t := range tags {
-		data, _ := t.Marshal()
-		args = append(args, data...)
-	}
-	args = append(args, e.Content()...)
-	args = append(args, ']')
-	return args
+	byt := make([]byte, 0)
+	byt = append(byt, []byte("[0")...)
+	byt = append(byt, ',')
+	byt = append(byt, []byte(fmt.Sprintf("\"%s\"", e.PublicKey()))...)
+	byt = append(byt, ',')
+	byt = append(byt, []byte(fmt.Sprintf("%d", e.CreatedAt()))...)
+	byt = append(byt, ',')
+	byt = append(byt, []byte(fmt.Sprintf("%d", e.Kind()))...)
+	byt = append(byt, ',')
+	tags, _ := json.Marshal(e.Tags())
+	byt = append(byt, tags...)
+	byt = append(byt, ',')
+	byt = append(byt, []byte(fmt.Sprintf("\"%s\"", e.Content()))...)
+	byt = append(byt, ']')
+	return byt
 }
 
 // Set associates a value with a given key in the RawEvent.
@@ -182,13 +206,16 @@ func (e *RawEvent) Sign(privateKey string) error {
 	if err != nil {
 		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, err)
 	}
+	e.Set("created_at", time.Now().Unix())
 	prvKey, pubKey := btcec.PrivKeyFromBytes(s)
-	pubKeyByt := pubKey.SerializeCompressed()
-	e.Set("pubkey", hex.EncodeToString(pubKeyByt[1:]))
+	e.Set("pubkey", hex.EncodeToString(pubKey.SerializeCompressed()[1:]))
 	h := sha256.Sum256(e.Serialize())
 	sig, err := schnorr.Sign(prvKey, h[:])
 	if err != nil {
 		return err
+	}
+	if e.Get("tags") == nil {
+		e.Set("tags", []RawTag{})
 	}
 	e.Set("id", hex.EncodeToString(h[:]))
 	e.Set("sig", hex.EncodeToString(sig.Serialize()))
@@ -212,37 +239,45 @@ func (e *RawEvent) Tags() []Tag {
 	return tags
 }
 
-// Marshal marshals the RawEvent to a byte slice.
-func (e *RawEvent) Marshal() ([]byte, error) {
-	return json.Marshal(e)
-}
-
 // Unmarshal unmarshals the RawEvent from a byte slice.
 func (e *RawEvent) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, &e)
+	return e.UnmarshalJSON(data)
+}
+
+// UnmarshalJSON TBD
+func (e *RawEvent) UnmarshalJSON(data []byte) error {
+	evnt := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(data, &evnt); err != nil {
+		return err
+	}
+	*e = evnt
+	return nil
 }
 
 // Validate validates the RawEvent.
 func (e *RawEvent) Validate() error {
-	pubKeyHex, err := hex.DecodeString(string(e.PublicKey()))
-	if err != nil {
-		return fmt.Errorf("event pubkey '%s' is invalid hex: %w", e.PublicKey(), err)
+	pubKeyHex := make([]byte, hex.DecodedLen(len(e.PublicKey())))
+	if _, err := hex.Decode(pubKeyHex, e.PublicKey()); err != nil {
+		return nil
 	}
 	pubKey, err := schnorr.ParsePubKey(pubKeyHex)
 	if err != nil {
-		return fmt.Errorf("event has invalid pubkey '%s': %w", e.PublicKey(), err)
+		return err
 	}
-	sigStr, err := hex.DecodeString(string(e.Signature()))
-	if err != nil {
-		return fmt.Errorf("signature '%s' is invalid hex: %w", e.Signature(), err)
+	sigHex := make([]byte, hex.DecodedLen((len(e.Signature()))))
+	if _, err := hex.Decode(sigHex, e.Signature()); err != nil {
+		return err
 	}
-	sig, err := schnorr.ParseSignature(sigStr)
 	if err != nil {
-		return fmt.Errorf("failed to parse signature: %w", err)
+		return err
+	}
+	sig, err := schnorr.ParseSignature(sigHex)
+	if err != nil {
+		return err
 	}
 	hash := sha256.Sum256(e.Serialize())
 	if !sig.Verify(hash[:], pubKey) {
-		return fmt.Errorf("")
+		return fmt.Errorf("can't verify")
 	}
 	return nil
 }
@@ -258,7 +293,7 @@ func (e *RawEvent) Values() []any {
 
 // NewMetadataEvent creates a new metadata event.
 func NewMetadataEvent() Event {
-	event := &MetadataEvent{}
+	event := &MetadataEvent{&RawEvent{}}
 	event.Set("kind", EventKindMetadata)
 	return event
 }
@@ -269,9 +304,10 @@ type MetadataEvent struct {
 }
 
 // NewShortTextNoteEvent creates a new short text note event.
-func NewShortTextNoteEvent() Event {
-	event := &ShortTextNoteEvent{}
+func NewShortTextNoteEvent(content string) Event {
+	event := &ShortTextNoteEvent{&RawEvent{}}
 	event.Set("kind", EventKindShortTextNote)
+	event.Set("content", content)
 	return event
 }
 

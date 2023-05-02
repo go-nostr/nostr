@@ -37,6 +37,7 @@ func buildCloseCommand() *command.CloseCommand {
 
 func buildEventCommand() *command.EventCommand {
 	wire.Build(
+		buildClient,
 		command.NewEventCommand,
 	)
 	return &command.EventCommand{}

@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/google/subcommands v1.0.1 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

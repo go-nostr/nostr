@@ -103,7 +103,7 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 		}
 		typ := mess.Type()
 		if cl.messHandlers[string(typ)] == nil {
-			fmt.Printf("Warn: no handler configured for message type: %v\n", typ)
+			fmt.Printf("Warn: no handler configured for message type: %s\n", typ)
 			return
 		}
 		go cl.messHandlers[string(typ)].Handle(&mess)
