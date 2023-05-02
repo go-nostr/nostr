@@ -657,7 +657,6 @@ func TestRawEvent_Validate(t *testing.T) {
 		})
 	}
 }
-
 func TestRawEvent_Values(t *testing.T) {
 	events := map[int]nostr.Event{
 		1: nostr.NewRawEvent(),
@@ -678,27 +677,7 @@ func TestRawEvent_Values(t *testing.T) {
 		fields fields
 		expect []any
 	}{
-		// {
-		// 	name: "MUST get values",
-		// 	fields: fields{
-		// 		event: events[1],
-		// 	},
-		// 	expect: []any{json.RawMessage(`"value1"`), json.RawMessage(`"value2"`)},
-		// },
-		// {
-		// 	name: "MUST get a single value",
-		// 	fields: fields{
-		// 		event: events[2],
-		// 	},
-		// 	expect: []any{json.RawMessage(`"value3"`)},
-		// },
-		// {
-		// 	name: "MUST return empty values for event with malformed value",
-		// 	fields: fields{
-		// 		event: events[3],
-		// 	},
-		// 	expect: []any{json.RawMessage("{}")},
-		// },
+		// TODO
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

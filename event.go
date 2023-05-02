@@ -5,7 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
 	"time"
+=======
+>>>>>>> main
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
@@ -61,7 +64,11 @@ type Event interface {
 	PublicKey() []byte
 	Serialize() []byte
 	Set(key string, val any) error
+<<<<<<< HEAD
 	Sign(privateKey string) error
+=======
+	Sign(prvKey string) error
+>>>>>>> main
 	Signature() []byte
 	Tags() []Tag
 	Unmarshal(data []byte) error
@@ -206,17 +213,26 @@ func (e *RawEvent) Sign(privateKey string) error {
 	if err != nil {
 		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, err)
 	}
+<<<<<<< HEAD
 	e.Set("created_at", time.Now().Unix())
 	prvKey, pubKey := btcec.PrivKeyFromBytes(s)
 	e.Set("pubkey", hex.EncodeToString(pubKey.SerializeCompressed()[1:]))
+=======
+	prvKey, pubKey := btcec.PrivKeyFromBytes(s)
+	pubKeyByt := pubKey.SerializeCompressed()
+	e.Set("pubkey", hex.EncodeToString(pubKeyByt[1:]))
+>>>>>>> main
 	h := sha256.Sum256(e.Serialize())
 	sig, err := schnorr.Sign(prvKey, h[:])
 	if err != nil {
 		return err
 	}
+<<<<<<< HEAD
 	if e.Get("tags") == nil {
 		e.Set("tags", []RawTag{})
 	}
+=======
+>>>>>>> main
 	e.Set("id", hex.EncodeToString(h[:]))
 	e.Set("sig", hex.EncodeToString(sig.Serialize()))
 	return nil
@@ -254,6 +270,7 @@ func (e *RawEvent) UnmarshalJSON(data []byte) error {
 
 // Validate validates the RawEvent.
 func (e *RawEvent) Validate() error {
+<<<<<<< HEAD
 	pubKeyHex := make([]byte, hex.DecodedLen(len(e.PublicKey())))
 	if _, err := hex.Decode(pubKeyHex, e.PublicKey()); err != nil {
 		return nil
@@ -276,6 +293,27 @@ func (e *RawEvent) Validate() error {
 	hash := sha256.Sum256(e.Serialize())
 	if !sig.Verify(hash[:], pubKey) {
 		return fmt.Errorf("can't verify")
+=======
+	pubKeyHex, err := hex.DecodeString(string(e.PublicKey()))
+	if err != nil {
+		return fmt.Errorf("event pubkey '%s' is invalid hex: %w", e.PublicKey(), err)
+	}
+	pubKey, err := schnorr.ParsePubKey(pubKeyHex)
+	if err != nil {
+		return fmt.Errorf("event has invalid pubkey '%s': %w", e.PublicKey(), err)
+	}
+	sigStr, err := hex.DecodeString(string(e.Signature()))
+	if err != nil {
+		return fmt.Errorf("signature '%s' is invalid hex: %w", e.Signature(), err)
+	}
+	sig, err := schnorr.ParseSignature(sigStr)
+	if err != nil {
+		return fmt.Errorf("failed to parse signature: %w", err)
+	}
+	hash := sha256.Sum256(e.Serialize())
+	if !sig.Verify(hash[:], pubKey) {
+		return fmt.Errorf("")
+>>>>>>> main
 	}
 	return nil
 }
