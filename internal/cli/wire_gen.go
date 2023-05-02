@@ -8,45 +8,57 @@ package main
 
 import (
 	"github.com/go-nostr/nostr"
-	"github.com/go-nostr/nostr/internal/command"
+	"github.com/go-nostr/nostr/internal/command/authcommand"
+	"github.com/go-nostr/nostr/internal/command/closecommand"
+	"github.com/go-nostr/nostr/internal/command/countcommand"
+	"github.com/go-nostr/nostr/internal/command/eventcommand"
+	"github.com/go-nostr/nostr/internal/command/noticecommand"
+	"github.com/go-nostr/nostr/internal/command/okcommand"
+	"github.com/go-nostr/nostr/internal/command/requestcommand"
 )
 
 // Injectors from wire.go:
 
-func buildAuthCommand() *command.AuthCommand {
-	authCommand := command.NewAuthCommand()
+func buildAuthCommand() *authcommand.AuthCommand {
+	authCommand := authcommand.New()
 	return authCommand
 }
 
-func buildCountCommand() *command.CountCommand {
-	countCommand := command.NewCountCommand()
+func buildCountCommand() *countcommand.CountCommand {
+	countCommand := countcommand.New()
 	return countCommand
 }
 
-func buildCloseCommand() *command.CloseCommand {
-	closeCommand := command.NewCloseCommand()
+func buildCloseCommand() *closecommand.CloseCommand {
+	closeCommand := closecommand.New()
 	return closeCommand
 }
 
-func buildEventCommand() *command.EventCommand {
+func buildEventCommand() *eventcommand.EventCommand {
 	client := buildClient()
-	eventCommand := command.NewEventCommand(client)
+	options := &eventcommand.Options{
+		Client: client,
+	}
+	eventCommand := eventcommand.New(options)
 	return eventCommand
 }
 
-func buildNoticeCommand() *command.NoticeCommand {
-	noticeCommand := command.NewNoticeCommand()
+func buildNoticeCommand() *noticecommand.NoticeCommand {
+	noticeCommand := noticecommand.New()
 	return noticeCommand
 }
 
-func buildOkCommand() *command.OkCommand {
-	okCommand := command.NewOkCommand()
+func buildOkCommand() *okcommand.OkCommand {
+	okCommand := okcommand.New()
 	return okCommand
 }
 
-func buildRequestCommand() *command.RequestCommand {
+func buildRequestCommand() *requestcommand.RequestCommand {
 	client := buildClient()
-	requestCommand := command.NewRequestCommand(client)
+	options := &requestcommand.Options{
+		Client: client,
+	}
+	requestCommand := requestcommand.New(options)
 	return requestCommand
 }
 

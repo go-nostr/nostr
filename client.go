@@ -97,13 +97,13 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 		// TODO: add websocket mess. type handling
 		var mess RawMessage
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
-			fmt.Printf("Error: %v", err.Error())
+			fmt.Println(err.Error())
 			cl.err <- err
 			return
 		}
 		typ := mess.Type()
 		if cl.messHandlers[string(typ)] == nil {
-			fmt.Printf("Warn: no handler configured for message type: %s\n", typ)
+			fmt.Printf("no handler configured for message type: %s\n", typ)
 			return
 		}
 		go cl.messHandlers[string(typ)].Handle(&mess)
@@ -115,5 +115,5 @@ func (cl *Client) removeConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	delete(cl.conns, conn)
-	conn.Close(websocket.StatusNormalClosure, "Info: closing connection")
+	conn.Close(websocket.StatusNormalClosure, "closing connection")
 }
