@@ -246,9 +246,11 @@ func (e *RawEvent) Unmarshal(data []byte) error {
 
 // UnmarshalJSON TBD
 func (e *RawEvent) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, e); err != nil {
+	evnt := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(data, &evnt); err != nil {
 		return err
 	}
+	*e = evnt
 	return nil
 }
 

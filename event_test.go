@@ -194,7 +194,7 @@ func TestRawEvent_ID(t *testing.T) {
 			fields: fields{
 				event: evnts[0],
 			},
-			expect: []byte("5767e070aa7effa42334cf29f5f73d1d5aa93d2ca0e16e6e8905aca7f4fcc172"),
+			expect: []byte("c9ddf2ac3372064964886118914acbccaffeba478dd3523f6beb5a48828843af"),
 		},
 	}
 	for _, tt := range tests {
@@ -402,7 +402,7 @@ func TestRawEvent_Serialize(t *testing.T) {
 			fields: fields{
 				evnt: evnts[0],
 			},
-			expect: []byte("[0,asdf,1682970074,30078,[],a]"),
+			expect: []byte("[0,\"asdf\",1682970074,30078,[],\"a\"]"),
 		},
 	}
 	for _, tt := range tests {

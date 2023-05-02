@@ -73,7 +73,7 @@ func (m *RawMessage) MarshalJSON() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		byt = append(byt, []byte(fmt.Sprintf("%s", data))...)
+		byt = append(byt, data...)
 		if i < len-1 {
 			byt = append(byt, ',')
 		}
@@ -116,7 +116,7 @@ func (m *RawMessage) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &mess); err != nil {
 		return err
 	}
-	*m = RawMessage(mess)
+	*m = mess
 	return nil
 }
 
