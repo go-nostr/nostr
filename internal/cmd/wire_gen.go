@@ -8,8 +8,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/internal/web"
+	"github.com/go-nostr/nostr/relay"
 	"io/fs"
 	"net/http"
 )
@@ -62,5 +62,5 @@ func provideClientHandler() http.Handler {
 }
 
 func provideRelayHandler() http.Handler {
-	return nostr.NewRelay(nil)
+	return relay.New(nil)
 }

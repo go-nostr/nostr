@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/client"
+	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
 func New(opt *Options) *RequestCommand {
@@ -15,16 +17,16 @@ func New(opt *Options) *RequestCommand {
 		flagSet: flag.NewFlagSet("req", flag.ExitOnError),
 	}
 	cmd.flagSet.StringVar(&cmd.subscriptionID, "sid", "undefined", "Subscription ID used for ...")
-	cmd.flagSet.StringVar(&cmd.relay, "u", "undefined", "Relay URL ...")
+	cmd.flagSet.StringVar(&cmd.relay, "u", "wss://relay.damus.io", "Relay URL ...")
 	return cmd
 }
 
 type Options struct {
-	Client *nostr.Client
+	Client *client.Client
 }
 
 type RequestCommand struct {
-	client         *nostr.Client
+	client         *client.Client
 	flagSet        *flag.FlagSet
 	relay          string
 	subscriptionID string
@@ -43,9 +45,9 @@ func (c *RequestCommand) Name() string {
 func (c *RequestCommand) Run() error {
 	ctx := context.Background()
 	content := make(chan []byte)
-	mess := nostr.NewRequestMessage(c.subscriptionID, &nostr.Filter{})
+	mess := requestmessage.New(c.subscriptionID, &nostr.Filter{})
 	c.client.HandleMessageFunc(nostr.MessageTypeEvent, func(mess nostr.Message) {
-		fmt.Printf("%s (%s):\t\t%s\n\n", mess.Values()[2].(map[string]any)["id"], mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
+		fmt.Printf("%s:\n\n%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
 	})
 	c.client.HandleMessageFunc(nostr.MessageTypeNotice, func(mess nostr.Message) {
 		if data, err := mess.Marshal(); err == nil {

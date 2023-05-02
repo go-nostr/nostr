@@ -4,7 +4,7 @@
 package main
 
 import (
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/client"
 	"github.com/go-nostr/nostr/internal/command/authcommand"
 	"github.com/go-nostr/nostr/internal/command/closecommand"
 	"github.com/go-nostr/nostr/internal/command/countcommand"
@@ -15,8 +15,8 @@ import (
 	"github.com/google/wire"
 )
 
-func buildClient() *nostr.Client {
-	return nostr.NewClient(nil)
+func buildClient() *client.Client {
+	return client.New(nil)
 }
 
 func buildAuthCommand() *authcommand.AuthCommand {
