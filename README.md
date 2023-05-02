@@ -6,11 +6,13 @@ Please be aware that the code and documentation may contain unfinished features 
 
 Roadmap:
 
-- [ ] `nostr` core package for use by external applications and executable
-- [ ] `internal/cli` command-line client interface for Nostr client
-- [ ] `internal/cmd` relay server with persistent data repositories
-- [ ] `internal/docs` documentation site built with Hugo
-- [ ] `internal/web` web client and relay administrator interface built with Angular
+| Status      | Milestone       | Description                                                     |
+|-------------|-----------------|-----------------------------------------------------------------|
+| In-progress | `nostr`         | core package for use by external applications and executable    |
+| In-progress | `internal/cli`  | command-line client interface for Nostr client                  |
+| To-do       | `internal/cmd`  | relay server with persistent data repositories                  |
+| To-do       | `internal/docs` | documentation site built with Hugo                              |
+| To-do       | `internal/web`  | web client and relay administrator interface built with Angular |
 
 ## Overview
 
