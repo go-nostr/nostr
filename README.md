@@ -1,5 +1,7 @@
 # @go-nostr/nostr
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/go-nostr/nostr.svg)](https://pkg.go.dev/github.com/go-nostr/nostr)
+
 ⚠️ **WARNING: This project is actively under development and no stable releases have been made yet.** ⚠️
 
 Please be aware that the code and documentation may contain unfinished features or inconsistencies. We appreciate your interest in the project and encourage you to check back for updates on progress towards a stable release.
