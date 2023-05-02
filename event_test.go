@@ -577,7 +577,7 @@ func TestRawEvent_Marshal(t *testing.T) {
 			fields: fields{
 				event: event,
 			},
-			want:    []byte("{\"id\":\"test-id\",\"tags\":[[\"tag1\"],[\"tag2\"]]}"),
+			want:    []byte(`{"id":"test-id","tags":[["tag1"],["tag2"]]}`),
 			wantErr: false,
 		},
 	}

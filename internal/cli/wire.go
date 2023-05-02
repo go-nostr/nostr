@@ -5,7 +5,13 @@ package main
 
 import (
 	"github.com/go-nostr/nostr"
-	"github.com/go-nostr/nostr/internal/command"
+	"github.com/go-nostr/nostr/internal/command/authcommand"
+	"github.com/go-nostr/nostr/internal/command/closecommand"
+	"github.com/go-nostr/nostr/internal/command/countcommand"
+	"github.com/go-nostr/nostr/internal/command/eventcommand"
+	"github.com/go-nostr/nostr/internal/command/noticecommand"
+	"github.com/go-nostr/nostr/internal/command/okcommand"
+	"github.com/go-nostr/nostr/internal/command/requestcommand"
 	"github.com/google/wire"
 )
 
@@ -13,56 +19,62 @@ func buildClient() *nostr.Client {
 	return nostr.NewClient(nil)
 }
 
-func buildAuthCommand() *command.AuthCommand {
+func buildAuthCommand() *authcommand.AuthCommand {
 	wire.Build(wire.NewSet(
-		command.NewAuthCommand,
+		authcommand.New,
 	))
-	return &command.AuthCommand{}
+	return &authcommand.AuthCommand{}
 }
 
-func buildCountCommand() *command.CountCommand {
+func buildCountCommand() *countcommand.CountCommand {
 	wire.Build(
-		command.NewCountCommand,
+		countcommand.New,
 	)
-	return &command.CountCommand{}
+	return &countcommand.CountCommand{}
 }
 
-func buildCloseCommand() *command.CloseCommand {
+func buildCloseCommand() *closecommand.CloseCommand {
 	wire.Build(
-		command.NewCloseCommand,
+		closecommand.New,
 	)
-	return &command.CloseCommand{}
-
-}
-
-func buildEventCommand() *command.EventCommand {
-	wire.Build(
-		buildClient,
-		command.NewEventCommand,
-	)
-	return &command.EventCommand{}
-}
-
-func buildNoticeCommand() *command.NoticeCommand {
-	wire.Build(
-		command.NewNoticeCommand,
-	)
-	return &command.NoticeCommand{}
-}
-
-func buildOkCommand() *command.OkCommand {
-	wire.Build(
-		command.NewOkCommand,
-	)
-	return &command.OkCommand{}
+	return &closecommand.CloseCommand{}
 
 }
 
-func buildRequestCommand() *command.RequestCommand {
+func buildEventCommand() *eventcommand.EventCommand {
 	wire.Build(
-		buildClient,
-		command.NewRequestCommand,
+		wire.NewSet(
+			buildClient,
+			wire.Struct(new(eventcommand.Options), "Client"),
+		),
+		eventcommand.New,
 	)
-	return &command.RequestCommand{}
+	return &eventcommand.EventCommand{}
+}
+
+func buildNoticeCommand() *noticecommand.NoticeCommand {
+	wire.Build(
+		noticecommand.New,
+	)
+	return &noticecommand.NoticeCommand{}
+}
+
+func buildOkCommand() *okcommand.OkCommand {
+	wire.Build(
+		okcommand.New,
+	)
+	return &okcommand.OkCommand{}
+
+}
+
+func buildRequestCommand() *requestcommand.RequestCommand {
+	wire.Build(
+		wire.NewSet(
+			buildClient,
+			wire.Struct(new(requestcommand.Options), "Client"),
+		),
+		requestcommand.New,
+	)
+	return &requestcommand.RequestCommand{}
 
 }
