@@ -1,25 +1,25 @@
-package nostr_test
+package message_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/message"
 )
 
-func Test_NewRawMessage(t *testing.T) {
+func Test_NewMessage(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect nostr.Message
+		expect *message.Message
 	}{
 		{
-			name:   "MUST create a new RawMessage with given type",
-			expect: &nostr.RawMessage{[]byte("\"type\"")},
+			name:   "MUST create a new Message with given type",
+			expect: &message.Message{[]byte("\"type\"")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewRawMessage("type")
+			mess := message.New("type")
 			if !reflect.DeepEqual(mess, tt.expect) {
 				t.Fatalf("expected %v, got %v", tt.expect, mess)
 			}
@@ -28,10 +28,10 @@ func Test_NewRawMessage(t *testing.T) {
 	}
 }
 
-func TestRawMessage_Marshal(t *testing.T) {
+func TestMessage_Marshal(t *testing.T) {
 	type args struct{}
 	type fields struct {
-		mess nostr.Message
+		mess *message.Message
 	}
 	tests := []struct {
 		name   string
@@ -41,10 +41,10 @@ func TestRawMessage_Marshal(t *testing.T) {
 		err    error
 	}{
 		{
-			name: "MUST create a new RawMessage with given type",
+			name: "MUST create a new Message with given type",
 			args: args{},
 			fields: fields{
-				mess: nostr.NewRawMessage("type"),
+				mess: message.New("type"),
 			},
 			expect: []byte("[\"type\"]"),
 		},
@@ -63,9 +63,9 @@ func TestRawMessage_Marshal(t *testing.T) {
 	}
 }
 
-func TestRawMessage_Type(t *testing.T) {
+func TestMessage_Type(t *testing.T) {
 	type fields struct {
-		mess nostr.Message
+		mess *message.Message
 	}
 	tests := []struct {
 		name   string
@@ -76,7 +76,7 @@ func TestRawMessage_Type(t *testing.T) {
 		{
 			name: "MUST get type for raw message",
 			fields: fields{
-				mess: nostr.NewRawMessage("type"),
+				mess: message.New("type"),
 			},
 			expect: []byte("type"),
 		},
@@ -92,29 +92,29 @@ func TestRawMessage_Type(t *testing.T) {
 	}
 }
 
-func TestRawMessage_Unmarshal(t *testing.T) {
+func TestMessage_Unmarshal(t *testing.T) {
 	type args struct {
 		data []byte
 	}
 	type fields struct {
-		mess nostr.Message
+		mess *message.Message
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect nostr.Message
+		expect *message.Message
 		err    error
 	}{
 		{
-			name: "MUST unmarshal RawMessage",
+			name: "MUST unmarshal Message",
 			args: args{
 				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				mess: &nostr.RawMessage{},
+				mess: &message.Message{},
 			},
-			expect: nostr.NewRawMessage("type"),
+			expect: message.New("type"),
 		},
 	}
 	for _, tt := range tests {
@@ -131,9 +131,9 @@ func TestRawMessage_Unmarshal(t *testing.T) {
 	}
 }
 
-func TestRawMessage_Values(t *testing.T) {
+func TestMessage_Values(t *testing.T) {
 	type fields struct {
-		mess nostr.Message
+		mess *message.Message
 	}
 	tests := []struct {
 		name   string
@@ -144,7 +144,7 @@ func TestRawMessage_Values(t *testing.T) {
 		{
 			name: "MUST get type for raw message",
 			fields: fields{
-				mess: nostr.NewRawMessage("type"),
+				mess: message.New("type"),
 			},
 			expect: []any{"type"},
 		},

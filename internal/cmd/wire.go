@@ -8,8 +8,8 @@ import (
 	"io/fs"
 	"net/http"
 
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/internal/web"
+	"github.com/go-nostr/nostr/relay"
 	"github.com/google/wire"
 )
 
@@ -37,7 +37,7 @@ func provideClientHandler() http.Handler {
 }
 
 func provideRelayHandler() http.Handler {
-	return nostr.NewRelay(nil)
+	return relay.New(nil)
 }
 
 func buildClientServer() *http.Server {

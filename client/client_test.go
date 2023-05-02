@@ -1,4 +1,4 @@
-package nostr_test
+package client_test
 
 // func Test_NewClient(t *testing.T) {
 // 	tests := []struct {

@@ -1,6 +1,7 @@
 package nostr
 
-// Count represents the count of a specific item or event.
+// Count represents the occurrences of an item or event.
 type Count struct {
-	Count int `json:"count,omitempty"` // The number of occurrences of the item or event.
+	// Count represents the occurrences of an item or event.
+	Count int `json:"count,omitempty"`
 }

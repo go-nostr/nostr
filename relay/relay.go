@@ -1,4 +1,4 @@
-package nostr
+package relay
 
 import (
 	"context"
@@ -8,15 +8,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/message"
 	"nhooyr.io/websocket"
 )
 
-// NewRelay creates and initializes a new Relay instance with the given RelayOptions.
-func NewRelay(opt *RelayOptions) *Relay {
+// New creates and initializes a new Relay instance with the given Options.
+func New(opt *Options) *Relay {
 	rl := &Relay{
-		RelayOptions: opt,
+		Options:      opt,
 		conn:         make(map[*websocket.Conn]struct{}),
-		messHandlers: make(map[string]MessageHandler),
+		messHandlers: make(map[string]nostr.MessageHandler),
 		serveMux:     new(http.ServeMux),
 	}
 	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.internetIdentifierHandlerFunc)
@@ -24,23 +26,23 @@ func NewRelay(opt *RelayOptions) *Relay {
 	return rl
 }
 
-// RelayOptions holds the configuration options for a Relay instance.
-type RelayOptions struct {
-	Name          string       `json:"name,omitempty"`
-	Description   string       `json:"description,omitempty"`
-	PubKey        string       `json:"pub_key,omitempty"`
-	Contact       string       `json:"contact,omitempty"`
-	SupportedNIPs []int        `json:"supported_nips,omitempty"`
-	Software      string       `json:"software,omitempty"`
-	Version       string       `json:"version,omitempty"`
-	Limitations   *Limitations `json:"limitations,omitempty"`
+// Options holds the configuration options for a Relay instance.
+type Options struct {
+	Name          string             `json:"name,omitempty"`
+	Description   string             `json:"description,omitempty"`
+	PubKey        string             `json:"pub_key,omitempty"`
+	Contact       string             `json:"contact,omitempty"`
+	SupportedNIPs []int              `json:"supported_nips,omitempty"`
+	Software      string             `json:"software,omitempty"`
+	Version       string             `json:"version,omitempty"`
+	Limitations   *nostr.Limitations `json:"limitations,omitempty"`
 }
 
 // Relay represents a websocket relay server with a set of options and handlers.
 type Relay struct {
-	*RelayOptions
+	*Options
 
-	messHandlers map[string]MessageHandler
+	messHandlers map[string]nostr.MessageHandler
 	names        map[string]string
 	serveMux     *http.ServeMux
 	conn         map[*websocket.Conn]struct{}
@@ -58,17 +60,17 @@ func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, 
 }
 
 // HandleMessage registers the message handler for the given message type.
-func (rl *Relay) HandleMessage(typ string, handler MessageHandler) {
+func (rl *Relay) HandleMessage(typ string, handler nostr.MessageHandler) {
 	rl.messHandlers[typ] = handler
 }
 
 // HandleMessageFunc registers the message handler function for the given message type.
-func (rl *Relay) HandleMessageFunc(typ string, handler func(mess Message)) {
-	rl.messHandlers[typ] = MessageHandlerFunc(handler)
+func (rl *Relay) HandleMessageFunc(typ string, handler func(mess nostr.Message)) {
+	rl.messHandlers[typ] = nostr.MessageHandlerFunc(handler)
 }
 
 // Publish broadcasts the given message to all connected clients.
-func (rl *Relay) Publish(mess Message) error {
+func (rl *Relay) Publish(mess nostr.Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	data, err := mess.Marshal()
@@ -128,7 +130,7 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 			return
 		}
 		// TODO: add websocket mess. type handling
-		var mess RawMessage
+		var mess message.Message
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
 			return
 		}

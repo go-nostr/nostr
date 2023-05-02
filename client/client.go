@@ -1,4 +1,4 @@
-package nostr
+package client
 
 import (
 	"context"
@@ -6,45 +6,47 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/message"
 	"nhooyr.io/websocket"
 )
 
-// NewClient TODO
-func NewClient(opt *ClientOptions) *Client {
+// New TODO
+func New(opt *Options) *Client {
 	return &Client{
-		ClientOptions: opt,
+		Options: opt,
 
 		err:          make(chan error),
 		conns:        make(map[*websocket.Conn]struct{}),
-		messHandlers: map[string]MessageHandler{},
+		messHandlers: map[string]nostr.MessageHandler{},
 	}
 }
 
-// ClientOptions TODO
-type ClientOptions struct{}
+// Options TODO
+type Options struct{}
 
 // Client TODO
 type Client struct {
-	*ClientOptions
+	*Options
 
 	conns        map[*websocket.Conn]struct{}
 	err          chan error
-	messHandlers map[string]MessageHandler
+	messHandlers map[string]nostr.MessageHandler
 	mu           sync.Mutex
 }
 
 // HandleMessage TODO
-func (cl *Client) HandleMessage(typ string, handler MessageHandler) {
+func (cl *Client) HandleMessage(typ string, handler nostr.MessageHandler) {
 	cl.messHandlers[typ] = handler
 }
 
 // HandleMessageFunc TODO
-func (cl *Client) HandleMessageFunc(typ string, handler func(mess Message)) {
-	cl.messHandlers[typ] = MessageHandlerFunc(handler)
+func (cl *Client) HandleMessageFunc(typ string, handler func(mess nostr.Message)) {
+	cl.messHandlers[typ] = nostr.MessageHandlerFunc(handler)
 }
 
 // Publish TODO
-func (cl *Client) Publish(mess Message) error {
+func (cl *Client) Publish(mess nostr.Message) error {
 	ctx := context.Background()
 	data, err := mess.Marshal()
 	if err != nil {
@@ -95,7 +97,7 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 			return
 		}
 		// TODO: add websocket mess. type handling
-		var mess RawMessage
+		var mess message.Message
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
 			fmt.Println(err.Error())
 			cl.err <- err

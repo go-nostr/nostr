@@ -1,25 +1,26 @@
-package nostr_test
+package rawtag_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/tag"
+	"github.com/go-nostr/nostr/tag/rawtag"
 )
 
 func Test_NewRawTag(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect nostr.Tag
+		expect tag.Tag
 	}{
 		{
 			name:   "MUST create a new RawTag with given type",
-			expect: &nostr.RawTag{[]byte("\"type\"")},
+			expect: &rawtag.RawTag{[]byte("\"type\"")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mess := nostr.NewRawTag("type")
+			mess := rawtag.New("type")
 			if !reflect.DeepEqual(mess, tt.expect) {
 				t.Fatalf("expected %v, got %v", tt.expect, mess)
 			}
@@ -31,7 +32,7 @@ func Test_NewRawTag(t *testing.T) {
 func TestRawTag_Marshal(t *testing.T) {
 	type args struct{}
 	type fields struct {
-		mess nostr.Tag
+		mess tag.Tag
 	}
 	tests := []struct {
 		name   string
@@ -44,7 +45,7 @@ func TestRawTag_Marshal(t *testing.T) {
 			name: "MUST create a new RawTag with given type",
 			args: args{},
 			fields: fields{
-				mess: nostr.NewRawTag("type"),
+				mess: rawtag.New("type"),
 			},
 			expect: []byte("[\"type\"]"),
 		},
@@ -65,7 +66,7 @@ func TestRawTag_Marshal(t *testing.T) {
 
 func TestRawTag_Type(t *testing.T) {
 	type fields struct {
-		mess nostr.Tag
+		mess *rawtag.RawTag
 	}
 	tests := []struct {
 		name   string
@@ -76,7 +77,7 @@ func TestRawTag_Type(t *testing.T) {
 		{
 			name: "MUST get type for raw message",
 			fields: fields{
-				mess: nostr.NewRawTag("type"),
+				mess: rawtag.New("type"),
 			},
 			expect: "type",
 		},
@@ -97,13 +98,13 @@ func TestRawTag_Unmarshal(t *testing.T) {
 		data []byte
 	}
 	type fields struct {
-		mess nostr.Tag
+		mess *rawtag.RawTag
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect nostr.Tag
+		expect *rawtag.RawTag
 		err    error
 	}{
 		{
@@ -112,9 +113,9 @@ func TestRawTag_Unmarshal(t *testing.T) {
 				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				mess: &nostr.RawTag{},
+				mess: &rawtag.RawTag{},
 			},
-			expect: nostr.NewRawTag("type"),
+			expect: rawtag.New("type"),
 		},
 	}
 	for _, tt := range tests {
@@ -133,7 +134,7 @@ func TestRawTag_Unmarshal(t *testing.T) {
 
 func TestRawTag_Values(t *testing.T) {
 	type fields struct {
-		mess nostr.Tag
+		mess *rawtag.RawTag
 	}
 	tests := []struct {
 		name   string
@@ -144,7 +145,7 @@ func TestRawTag_Values(t *testing.T) {
 		{
 			name: "MUST get type for raw message",
 			fields: fields{
-				mess: nostr.NewRawTag("type"),
+				mess: rawtag.New("type"),
 			},
 			expect: []any{"type"},
 		},

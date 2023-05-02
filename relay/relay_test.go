@@ -1,4 +1,4 @@
-package nostr_test
+package relay_test
 
 import (
 	"encoding/json"
@@ -8,18 +8,18 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/relay"
 )
 
 func Test_New(t *testing.T) {
-	r := nostr.NewRelay(nil)
+	r := relay.New(nil)
 	if r == nil {
 		t.Fatal("New should not return nil")
 	}
 }
 
 func TestRelay_WellKnownNostrEndpoint(t *testing.T) {
-	r := nostr.NewRelay(nil)
+	r := relay.New(nil)
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	type args struct {

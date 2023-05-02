@@ -25,7 +25,7 @@ func usageFunc() {
 		"\tok\tused to notify clients if an EVENT was successful\n" +
 		"\treq\tused to request events and subscribe to new updates\n" +
 		"\n" +
-		"Use \"nostr help <command>\" for more information about a command.\n" +
+		"Use \"nostr <command> -h\" for more information about a command.\n" +
 		"\n",
 	)
 }

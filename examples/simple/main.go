@@ -7,10 +7,12 @@ import (
 	"os"
 
 	"github.com/go-nostr/nostr"
+	"github.com/go-nostr/nostr/client"
+	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
 // Initialize a new Nostr client with default settings, and set default relay and subscription ID values
-var cl = nostr.NewClient(nil)
+var cl = client.New(nil)
 var relay string = "wss://relay.damus.io"
 var sid string = "asdf-1234"
 
@@ -28,7 +30,7 @@ func main() {
 	// Subscribe to the specified relay
 	cl.Subscribe(ctx, relay)
 	// Publish a request message to the relay to establish connection
-	cl.Publish(nostr.NewRequestMessage(sid, &nostr.Filter{}))
+	cl.Publish(requestmessage.New(sid, &nostr.Filter{}))
 	// Handle the End Of Subscription Epoch (EOSE) message, which indicates the end of a subscription epoch
 	cl.HandleMessageFunc(nostr.MessageTypeEOSE, func(mess nostr.Message) {
 		vals := mess.Values()
