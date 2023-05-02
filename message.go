@@ -4,25 +4,6 @@ import (
 	"encoding/json"
 )
 
-const (
-	// MessageTypeAuth represents an authentication message type.
-	MessageTypeAuth = "AUTH"
-	// MessageTypeClose represents a Close message type.
-	MessageTypeClose = "CLOSE"
-	// MessageTypeCount represents a count message type, usually for counting events.
-	MessageTypeCount = "COUNT"
-	// MessageTypeEndOfStoredEvents represents an End of Stored Events message type.
-	MessageTypeEOSE = "EOSE"
-	// MessageTypeEvent represents an Event message type.
-	MessageTypeEvent = "EVENT"
-	// MessageTypeNotice represents a Notice message type, usually for notifications.
-	MessageTypeNotice = "NOTICE"
-	// MessageTypeOk represents a success confirmation message type.
-	MessageTypeOk = "OK"
-	// MessageTypeRequest represents a Request message type.
-	MessageTypeRequest = "REQ"
-)
-
 // MessageHandlerFunc is a function type that takes a Message as a parameter.
 type MessageHandlerFunc func(mess Message)
 
