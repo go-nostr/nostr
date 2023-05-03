@@ -8,9 +8,6 @@ import (
 
 	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/client"
-	"github.com/go-nostr/nostr/message/eosemessage"
-	"github.com/go-nostr/nostr/message/eventmessage"
-	"github.com/go-nostr/nostr/message/noticemessage"
 	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
@@ -35,33 +32,13 @@ func main() {
 	// Publish a request message to the relay to establish connection
 	cl.Publish(requestmessage.New(sid, &nostr.Filter{}))
 	// Handle the End Of Subscription Epoch (EOSE) message, which indicates the end of a subscription epoch
-	cl.HandleMessageFunc(eosemessage.Type, func(mess nostr.Message) {
+	cl.HandleMessageFunc(func(mess nostr.Message) {
 		vals := mess.Values()
 		sid, ok := vals[1].(string)
 		if !ok {
 			return
 		}
 		fmt.Printf("EOSE:\t%s\n\n", sid)
-	})
-	// Handle Event messages, which are used for sending and receiving events in the Nostr network
-	cl.HandleMessageFunc(eventmessage.Type, func(mess nostr.Message) {
-		vals := mess.Values()
-		event, ok := vals[2].(map[string]interface{})
-		if !ok {
-			return
-		}
-		if event["kind"].(float64) == 1 {
-			fmt.Printf("npub:%s\n\n%s\n\n\n", event["pubkey"], event["content"])
-		}
-	})
-	// Handle Notice messages, which are used for sending and receiving notices in the Nostr network
-	cl.HandleMessageFunc(noticemessage.Type, func(mess nostr.Message) {
-		vals := mess.Values()
-		notice, ok := vals[1].(map[string]string)
-		if !ok {
-			return
-		}
-		fmt.Printf("NOTICE:\t%s\n\n", notice)
 	})
 	// Continuously listen for incoming messages until the context is cancelled
 	for {

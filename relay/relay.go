@@ -16,10 +16,9 @@ import (
 // New creates and initializes a new Relay instance with the given Options.
 func New(opt *Options) *Relay {
 	rl := &Relay{
-		Options:      opt,
-		conn:         make(map[*websocket.Conn]struct{}),
-		messHandlers: make(map[string]nostr.MessageHandler),
-		serveMux:     new(http.ServeMux),
+		Options:  opt,
+		conn:     make(map[*websocket.Conn]struct{}),
+		serveMux: new(http.ServeMux),
 	}
 	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.internetIdentifierHandlerFunc)
 	rl.serveMux.HandleFunc("/", rl.getConnectionHandlerFunc)
@@ -42,11 +41,11 @@ type Options struct {
 type Relay struct {
 	*Options
 
-	messHandlers map[string]nostr.MessageHandler
-	names        map[string]string
-	serveMux     *http.ServeMux
-	conn         map[*websocket.Conn]struct{}
-	mu           sync.Mutex
+	messHandler nostr.MessageHandler
+	names       map[string]string
+	serveMux    *http.ServeMux
+	conn        map[*websocket.Conn]struct{}
+	mu          sync.Mutex
 }
 
 // Handle registers the handler for the given pattern.
@@ -60,13 +59,13 @@ func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, 
 }
 
 // HandleMessage registers the message handler for the given message type.
-func (rl *Relay) HandleMessage(typ string, handler nostr.MessageHandler) {
-	rl.messHandlers[typ] = handler
+func (rl *Relay) HandleMessage(handler nostr.MessageHandler) {
+	rl.messHandler = handler
 }
 
 // HandleMessageFunc registers the message handler function for the given message type.
-func (rl *Relay) HandleMessageFunc(typ string, handler func(mess nostr.Message)) {
-	rl.messHandlers[typ] = nostr.MessageHandlerFunc(handler)
+func (rl *Relay) HandleMessageFunc(handler func(mess nostr.Message)) {
+	rl.messHandler = nostr.MessageHandlerFunc(handler)
 }
 
 // Publish broadcasts the given message to all connected clients.
@@ -134,10 +133,10 @@ func (rl *Relay) listenConn(conn *websocket.Conn) {
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
 			return
 		}
-		if rl.messHandlers[string(mess.Type())] == nil {
+		if rl.messHandler == nil {
 			return
 		}
-		go rl.messHandlers[string(mess.Type())].Handle(&mess)
+		go rl.messHandler.Handle(&mess)
 	}
 }
 

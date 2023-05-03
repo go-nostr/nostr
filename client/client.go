@@ -16,9 +16,8 @@ func New(opt *Options) *Client {
 	return &Client{
 		Options: opt,
 
-		err:          make(chan error),
-		conns:        make(map[*websocket.Conn]struct{}),
-		messHandlers: map[string]nostr.MessageHandler{},
+		err:   make(chan error),
+		conns: make(map[*websocket.Conn]struct{}),
 	}
 }
 
@@ -29,20 +28,20 @@ type Options struct{}
 type Client struct {
 	*Options
 
-	conns        map[*websocket.Conn]struct{}
-	err          chan error
-	messHandlers map[string]nostr.MessageHandler
-	mu           sync.Mutex
+	conns       map[*websocket.Conn]struct{}
+	err         chan error
+	messHandler nostr.MessageHandler
+	mu          sync.Mutex
 }
 
 // HandleMessage TODO
-func (cl *Client) HandleMessage(typ string, handler nostr.MessageHandler) {
-	cl.messHandlers[typ] = handler
+func (cl *Client) HandleMessage(handler nostr.MessageHandler) {
+	cl.messHandler = handler
 }
 
 // HandleMessageFunc TODO
-func (cl *Client) HandleMessageFunc(typ string, handler func(mess nostr.Message)) {
-	cl.messHandlers[typ] = nostr.MessageHandlerFunc(handler)
+func (cl *Client) HandleMessageFunc(handler func(mess nostr.Message)) {
+	cl.messHandler = nostr.MessageHandlerFunc(handler)
 }
 
 // Publish TODO
@@ -103,12 +102,11 @@ func (cl *Client) listenConn(conn *websocket.Conn) {
 			cl.err <- err
 			return
 		}
-		typ := mess.Type()
-		if cl.messHandlers[string(typ)] == nil {
-			fmt.Printf("no handler configured for message type: %s\n", typ)
+		if cl.messHandler == nil {
+			fmt.Printf("no handler configured\n")
 			return
 		}
-		go cl.messHandlers[string(typ)].Handle(&mess)
+		go cl.messHandler.Handle(&mess)
 	}
 }
 
