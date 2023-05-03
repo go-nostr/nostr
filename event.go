@@ -2,8 +2,6 @@ package nostr
 
 import (
 	"encoding/json"
-
-	"github.com/go-nostr/nostr/tag"
 )
 
 // Event represents an abstract event interface that can be extended to
@@ -23,7 +21,7 @@ type Event interface {
 	Set(key string, val any) error
 	Sign(privateKey string) error
 	Signature() []byte
-	Tags() []tag.Tag
+	Tags() []Tag
 	Unmarshal(data []byte) error
 	Validate() error
 	Values() []any
