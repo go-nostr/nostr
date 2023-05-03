@@ -22,7 +22,7 @@ type Message interface {
 	json.Marshaler
 	json.Unmarshaler
 	Marshal() ([]byte, error)
-	Push(v any) error
+	Push(val any) error
 	Type() []byte
 	Unmarshal(data []byte) error
 	Values() []any

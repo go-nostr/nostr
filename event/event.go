@@ -9,8 +9,8 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
+	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/tag"
-	"github.com/go-nostr/nostr/tag/rawtag"
 )
 
 type Options struct {
@@ -167,7 +167,7 @@ func (e *Event) Sign(privateKey string) error {
 		return err
 	}
 	if e.Get("tags") == nil {
-		e.Set("tags", []rawtag.RawTag{})
+		e.Set("tags", []nostr.Tag{})
 	}
 	e.Set("id", hex.EncodeToString(h[:]))
 	e.Set("sig", hex.EncodeToString(sig.Serialize()))
@@ -175,14 +175,14 @@ func (e *Event) Sign(privateKey string) error {
 }
 
 // Tags retrieves the list of tags associated with the Event.
-func (e *Event) Tags() []tag.Tag {
-	tags := make([]tag.Tag, 0)
+func (e *Event) Tags() []nostr.Tag {
+	tags := make([]nostr.Tag, 0)
 	var args []json.RawMessage
 	if err := json.Unmarshal((*e)["tags"], &args); err != nil {
 		return tags
 	}
 	for _, arg := range args {
-		var tag rawtag.RawTag
+		var tag tag.Tag
 		if err := tag.Unmarshal(arg); err != nil {
 			return tags
 		}
