@@ -16,7 +16,7 @@ type Options struct {
 }
 
 // New creates a new CountMessage.
-func New(opt *Options) (*message.Message, error) {
+func New(opt *Options) (message.Message, error) {
 	if opt.SubscriptionID != "" {
 		return message.New(Type, opt.SubscriptionID), nil
 	}

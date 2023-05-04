@@ -49,8 +49,8 @@ func (c *EventCommand) Name() string {
 
 func (c *EventCommand) Run() error {
 	ctx := context.Background()
-	messChan := make(chan *message.Message)
-	c.client.HandleMessageFunc(func(mess *message.Message) {
+	messChan := make(chan message.Message)
+	c.client.HandleMessageFunc(func(mess message.Message) {
 		messChan <- mess
 	})
 	if err := c.client.Subscribe(ctx, c.relay); err != nil {

@@ -10,11 +10,11 @@ import (
 func Test_New(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect *message.Message
+		expect message.Message
 	}{
 		{
 			name:   "MUST create new message",
-			expect: &message.Message{"type"},
+			expect: message.Message{"type"},
 		},
 	}
 	for _, tt := range tests {
@@ -31,7 +31,7 @@ func Test_New(t *testing.T) {
 func TestMessage_Marshal(t *testing.T) {
 	type args struct{}
 	type fields struct {
-		mess *message.Message
+		mess message.Message
 	}
 	tests := []struct {
 		name   string
@@ -68,13 +68,13 @@ func TestMessage_Push(t *testing.T) {
 		elem any
 	}
 	type fields struct {
-		mess *message.Message
+		mess message.Message
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect *message.Message
+		expect message.Message
 	}{
 		{
 			name: "MUST push value into message",
@@ -84,7 +84,7 @@ func TestMessage_Push(t *testing.T) {
 			fields: fields{
 				mess: message.New(),
 			},
-			expect: &message.Message{"type"},
+			expect: message.Message{"type"},
 		},
 	}
 	for _, tt := range tests {
@@ -103,13 +103,13 @@ func TestMessage_Unmarshal(t *testing.T) {
 		data []byte
 	}
 	type fields struct {
-		mess *message.Message
+		mess message.Message
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect *message.Message
+		expect message.Message
 		err    error
 	}{
 		{
@@ -118,7 +118,7 @@ func TestMessage_Unmarshal(t *testing.T) {
 				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				mess: &message.Message{},
+				mess: message.Message{},
 			},
 			expect: message.New("type"),
 		},
@@ -139,7 +139,7 @@ func TestMessage_Unmarshal(t *testing.T) {
 
 func TestMessage_Values(t *testing.T) {
 	type fields struct {
-		mess *message.Message
+		mess message.Message
 	}
 	tests := []struct {
 		name   string

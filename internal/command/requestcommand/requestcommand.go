@@ -44,7 +44,7 @@ func (c *RequestCommand) Run() error {
 	ctx := context.Background()
 	content := make(chan []byte)
 	mess := requestmessage.New(c.subscriptionID, &requestmessage.Filter{})
-	c.client.HandleMessageFunc(func(mess *message.Message) {
+	c.client.HandleMessageFunc(func(mess message.Message) {
 		if mess.Values()[0].(string) == "EVENT" {
 			fmt.Printf("%s:\n\n%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
 		}

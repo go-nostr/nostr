@@ -6,24 +6,23 @@ import (
 
 // Handler is an interface for handling Message types.
 type Handler interface {
-	Handle(mess *Message)
+	Handle(mess Message)
 }
 
 // HandlerFunc is a function type that takes a Message as a parameter.
-type HandlerFunc func(mess *Message)
+type HandlerFunc func(mess Message)
 
 // Handle calls the HandlerFunc with the provided Message.
-func (f HandlerFunc) Handle(mess *Message) {
+func (f HandlerFunc) Handle(mess Message) {
 	f(mess)
 }
 
 // New creates a new Message.
-func New(v ...any) *Message {
-	m := make(Message, 0)
-	for _, v := range v {
-		m = append(m, v)
+func New(v ...any) Message {
+	if v == nil {
+		v = make([]any, 0)
 	}
-	return &m
+	return Message(v)
 }
 
 // Message is a raw representation of a Message as a slice of json.Message.
