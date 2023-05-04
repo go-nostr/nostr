@@ -19,7 +19,7 @@ jobs:
       - name: Run Angular linter
         run: npm run lint -w internal/web
       - name: Tar files
-        run: tar -cvf "web.dist.${GITHUB_BASE_REF}.${GITHUB_SHA}.tar" internal/web/dist
+        run: tar -cvf dist.tar internal/web/dist
       - name: Upload Angular build artifacts
         uses: actions/upload-artifact@v3
         with:
