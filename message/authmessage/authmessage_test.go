@@ -16,7 +16,7 @@ func Test_New(t *testing.T) {
 	tests := []struct {
 		name   string
 		args   args
-		expect *message.Message
+		expect message.Message
 	}{
 		{
 			name: "MUST create new auth message with challenge",
@@ -25,7 +25,7 @@ func Test_New(t *testing.T) {
 					Challenge: "challenge",
 				},
 			},
-			expect: &message.Message{authmessage.Type, "challenge"},
+			expect: message.Message{authmessage.Type, "challenge"},
 		},
 		{
 			name: "MUST create new auth message with event",
@@ -34,7 +34,7 @@ func Test_New(t *testing.T) {
 					Event: event.New(0, ""),
 				},
 			},
-			expect: &message.Message{authmessage.Type, event.New(0, "")},
+			expect: message.Message{authmessage.Type, event.New(0, "")},
 		},
 	}
 	for _, tt := range tests {
