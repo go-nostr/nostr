@@ -67,3 +67,50 @@ func Test_Encode(t *testing.T) {
 		})
 	}
 }
+
+func Test_New(t *testing.T) {
+	tests := []struct {
+		name   string
+		expect string
+	}{
+		{
+			name: "SHOULD decode npub",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			prvKeyHex, pubKeyHex, npubStr, err := npub.New()
+			if err != nil {
+				t.Errorf("%v", err.Error())
+			}
+			if npubStr == "" {
+				t.Errorf("expected npub != \"\"")
+			}
+			t.Logf("got npub: %v", npubStr)
+			if pubKeyHex == "" {
+				t.Errorf("expected pubKeyHex != \"\"")
+			}
+			t.Logf("got pubKeyHex: %v", pubKeyHex)
+			if prvKeyHex == "" {
+				t.Errorf("expected prvKeyHex != \"\"")
+			}
+			t.Logf("got prvKeyHex: %v", prvKeyHex)
+			npubStr2, err := npub.Encode(pubKeyHex)
+			if err != nil {
+				t.Error(err)
+			}
+			if npubStr != npubStr2 {
+				t.Errorf("expected npubStr %v, got npubStr %v", npubStr, npubStr2)
+			}
+			t.Logf("got npubstr2: %v", npubStr2)
+			pubKeyHex2, err := npub.Decode(npubStr)
+			if err != nil {
+				t.Error(err)
+			}
+			if pubKeyHex != pubKeyHex2 {
+				t.Errorf("expected pubKeyHex %v, got pubKeyHex %v", pubKeyHex, pubKeyHex2)
+			}
+			t.Logf("got pubKeyHex2: %v", pubKeyHex2)
+		})
+	}
+}
