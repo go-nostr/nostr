@@ -256,26 +256,22 @@ TBD
 
 #### Messages
 
+##### Sign Messages
+
 ```mermaid
-erDiagram
-    MessageHandler ||--|| Message : "handles"
-    Message ||--o{ RawMessage : "implements"
-    Message ||--o{ AuthMessage : "implements"
-    Message ||--o{ CloseMessage : "implements"
-    Message ||--o{ CountMessage : "implements"
-    Message ||--o{ EOSEMessage : "implements"
-    Message ||--o{ EventMessage : "implements"
-    Message ||--o{ NoticeMessage : "implements"
-    Message ||--o{ OkMessage : "implements"
-    Message ||--o{ RequestMessage : "implements"
-    RawMessage ||--|{ AuthMessage : "extends"
-    RawMessage ||--|{ CloseMessage : "extends"
-    RawMessage ||--|{ CountMessage : "extends"
-    RawMessage ||--|{ EOSEMessage : "extends"
-    RawMessage ||--|{ EventMessage : "extends"
-    RawMessage ||--|{ NoticeMessage : "extends"
-    RawMessage ||--|{ OkMessage : "extends"
-    RawMessage ||--|{ RequestMessage : "extends"
+graph TD
+    A[Start] --> B[Decode private key hex string]
+    B -->|Error| C[Return error]
+    B -->|Success| D[Generate private and public keys from decoded string]
+    D --> E[Set encoded public key in Event]
+    E --> F[Set current Unix time as Event's creation time]
+    F --> G[Handle Event tags initialization]
+    G --> H[Compute SHA-256 hash of serialized Event]
+    H --> I[Sign the hash using Schnorr signature]
+    I -->|Error| J[Return error]
+    I -->|Success| K[Set hex-encoded signature in Event]
+    K --> L[Set hex-encoded hash as Event ID]
+    L --> M[Return nil]
 ```
 
 ### Other Requirements
