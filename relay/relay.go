@@ -14,6 +14,9 @@ import (
 
 // New creates and initializes a new Relay instance with the given Options.
 func New(opt *Options) *Relay {
+	if opt == nil {
+		opt = new(Options)
+	}
 	rl := &Relay{
 		Options: opt,
 		cxn:     make(map[*websocket.Conn]struct{}),
@@ -52,7 +55,7 @@ type Relay struct {
 }
 
 // HandleError registers the handler for the given pattern.
-func (rl *Relay) HandleError(fn func(err error)) {
+func (rl *Relay) HandleErrorFunc(fn func(err error)) {
 	rl.errFn = fn
 }
 
@@ -62,7 +65,7 @@ func (rl *Relay) HandleInternetIdentifierFunc(fn func(name string) (*InternetIde
 }
 
 // HandleMessage registers the message handler function for the given message type.
-func (rl *Relay) HandleMessage(fn func(msg message.Message)) {
+func (rl *Relay) HandleMessageFunc(fn func(msg message.Message)) {
 	rl.msgFn = fn
 }
 
@@ -93,6 +96,7 @@ func (rl *Relay) addConnection(cxn *websocket.Conn) {
 	rl.cxn[cxn] = struct{}{}
 }
 
+// getInformationDocumentHandlerFunc TBD
 func (rl *Relay) getInformationDocumentHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	infoDoc, err := rl.infoDocFn()
 	if err != nil {

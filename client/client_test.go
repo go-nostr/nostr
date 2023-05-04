@@ -43,10 +43,10 @@ func TestClient_Publish(t *testing.T) {
 	errChan := make(chan error)
 	msgChan := make(chan message.Message)
 	rl := relay.New(nil)
-	rl.HandleError(func(err error) {
+	rl.HandleErrorFunc(func(err error) {
 		errChan <- err
 	})
-	rl.HandleMessage(func(msg message.Message) {
+	rl.HandleMessageFunc(func(msg message.Message) {
 		msgChan <- msg
 	})
 	ts := httptest.NewServer(rl)

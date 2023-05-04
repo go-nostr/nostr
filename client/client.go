@@ -46,6 +46,7 @@ func (cl *Client) HandleMessageFunc(fn func(msg message.Message)) {
 	cl.msgFn = fn
 }
 
+// Listen TODO
 func (cl *Client) Listen(ctx context.Context) error {
 	for {
 		select {
