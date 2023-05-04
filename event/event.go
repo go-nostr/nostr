@@ -55,13 +55,13 @@ func (e *Event) Sign(prvKeyHex string) error {
 	prvKey, pubKey := btcec.PrivKeyFromBytes(prvKeyStr)
 	e.PubKey = hex.EncodeToString(pubKey.SerializeCompressed()[1:])
 	e.CreatedAt = int(time.Now().Unix())
+	if e.Tags == nil {
+		e.Tags = []tag.Tag{}
+	}
 	hash := sha256.Sum256(e.Serialize())
 	sig, err := schnorr.Sign(prvKey, hash[:])
 	if err != nil {
 		return err
-	}
-	if e.Tags == nil {
-		e.Tags = []tag.Tag{}
 	}
 	e.ID = hex.EncodeToString(hash[:])
 	e.Sig = hex.EncodeToString(sig.Serialize())
