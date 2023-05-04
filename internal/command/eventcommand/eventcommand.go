@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/btcutil/bech32"
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/client"
 	"github.com/go-nostr/nostr/event/shorttextnote"
+	"github.com/go-nostr/nostr/message"
 	"github.com/go-nostr/nostr/message/eventmessage"
 )
 
@@ -49,8 +49,8 @@ func (c *EventCommand) Name() string {
 
 func (c *EventCommand) Run() error {
 	ctx := context.Background()
-	messChan := make(chan nostr.Message)
-	c.client.HandleMessageFunc(func(mess nostr.Message) {
+	messChan := make(chan *message.Message)
+	c.client.HandleMessageFunc(func(mess *message.Message) {
 		messChan <- mess
 	})
 	if err := c.client.Subscribe(ctx, c.relay); err != nil {
@@ -71,7 +71,7 @@ func (c *EventCommand) Run() error {
 	evnt := shorttextnote.New(c.content)
 	evnt.Sign(prvKeyHex)
 	outMess := eventmessage.New("", evnt)
-	if err := c.client.Publish(outMess); err != nil {
+	if err := c.client.Publish(ctx, outMess); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

@@ -8,13 +8,6 @@ import (
 const Kind = 40
 
 // New creates a new channel creation event.
-func New() *ChannelCreationEvent {
-	event := &ChannelCreationEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	return event
-}
-
-// ChannelCreationEvent represents a channel creation event.
-type ChannelCreationEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

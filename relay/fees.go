@@ -1,4 +1,4 @@
-package nostr
+package relay
 
 // Fees is a struct that contains information about the fees associated with an operation.
 type Fees struct {

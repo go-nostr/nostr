@@ -2,88 +2,50 @@ package message
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-// New creates a new Message with the provided type.
-func New(typ string) *Message {
-	mess := &Message{}
-	mess.Push(typ)
-	return mess
+// Handler is an interface for handling Message types.
+type Handler interface {
+	Handle(mess *Message)
+}
+
+// HandlerFunc is a function type that takes a Message as a parameter.
+type HandlerFunc func(mess *Message)
+
+// Handle calls the HandlerFunc with the provided Message.
+func (f HandlerFunc) Handle(mess *Message) {
+	f(mess)
+}
+
+// New creates a new Message.
+func New(v ...any) *Message {
+	m := make(Message, 0)
+	for _, v := range v {
+		m = append(m, v)
+	}
+	return &m
 }
 
 // Message is a raw representation of a Message as a slice of json.Message.
-type Message []json.RawMessage
+type Message []any
 
 // Marshal marshals the Message into a JSON byte slice.
-func (m *Message) Marshal() ([]byte, error) {
-	return m.MarshalJSON()
-}
-
-// MarshalJSON TBD
-func (m *Message) MarshalJSON() ([]byte, error) {
-	byt := make([]byte, 0)
-	byt = append(byt, '[')
-	len := len(*m)
-	for i, v := range *m {
-		data, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		byt = append(byt, data...)
-		if i < len-1 {
-			byt = append(byt, ',')
-		}
-	}
-	byt = append(byt, ']')
-	return byt, nil
+func (m Message) Marshal() ([]byte, error) {
+	return json.Marshal(m)
 }
 
 // Push appends a value to the Message after marshaling it into a JSON Message.
 func (m *Message) Push(v any) error {
-	data, err := json.Marshal(v)
-	if err != nil {
-		fmt.Printf("%s", err)
-		return err
-	}
-	*m = append(*m, data)
+	*m = append(*m, v)
 	return nil
-}
-
-// Type returns the type of the Message.
-func (m *Message) Type() []byte {
-	if len(*m) < 1 {
-		return []byte{}
-	}
-	var typ string
-	if err := json.Unmarshal((*m)[0], &typ); err != nil {
-		return []byte{}
-	}
-	return []byte(typ)
 }
 
 // Unmarshal unmarshals a JSON byte slice into a Message.
 func (m *Message) Unmarshal(data []byte) error {
-	return m.UnmarshalJSON(data)
-}
-
-// UnmarshalJSON TBD
-func (m *Message) UnmarshalJSON(data []byte) error {
-	mess := make([]json.RawMessage, 0)
-	if err := json.Unmarshal(data, &mess); err != nil {
-		return err
-	}
-	*m = mess
-	return nil
+	return json.Unmarshal(data, m)
 }
 
 // Values returns the values of the Message as a slice of any.
-func (m *Message) Values() []any {
-	var vals []any
-	for _, arg := range *m {
-		var val any
-		json.Unmarshal(arg, &val)
-		vals = append(vals, val)
-	}
-	return vals
+func (m Message) Values() []any {
+	return []any(m)
 }

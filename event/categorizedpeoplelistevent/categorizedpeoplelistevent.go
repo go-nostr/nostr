@@ -2,19 +2,13 @@ package categorizedpeoplelistevent
 
 import (
 	"github.com/go-nostr/nostr/event"
+	"github.com/go-nostr/nostr/tag"
 )
 
 // Kind for managing categorized people list
 const Kind = 30000
 
 // New creates a new CategorizedPeopleListEvent.
-func New() *CategorizedPeopleListEvent {
-	event := &CategorizedPeopleListEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	return event
-}
-
-// CategorizedPeopleList represents a categorized people list event.
-type CategorizedPeopleListEvent struct {
-	*event.Event
+func New(content string, tags ...tag.Tag) *event.Event {
+	return event.New(Kind, content, tags...)
 }

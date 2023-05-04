@@ -1,17 +1,26 @@
 package countmessage
 
-import "github.com/go-nostr/nostr/message"
+import (
+	"github.com/go-nostr/nostr/message"
+)
+
+type Count struct {
+	Count int `json:"count,omitempty"`
+}
 
 const Type = "COUNT"
 
-// New creates a new CountMessage.
-func New() *CountMessage {
-	mess := &CountMessage{&message.Message{}}
-	mess.Push(Type)
-	return mess
+type Options struct {
+	Count          int
+	SubscriptionID string
 }
 
-// CountMessage is a specialized message type for counting events.
-type CountMessage struct {
-	*message.Message
+// New creates a new CountMessage.
+func New(opt *Options) (*message.Message, error) {
+	if opt.SubscriptionID != "" {
+		return message.New(Type, opt.SubscriptionID), nil
+	}
+	return message.New(Type, &Count{
+		Count: opt.Count,
+	}), nil
 }

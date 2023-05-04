@@ -1,4 +1,4 @@
-package nostr
+package relay
 
 // Admission represents the admission requirements for accessing a Nostr relay.
 type Admission struct {

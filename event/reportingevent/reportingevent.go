@@ -8,13 +8,6 @@ import (
 const Kind = 1984
 
 // New creates a new ReportingEvent.
-func New() *ReportingEvent {
-	event := &ReportingEvent{}
-	event.Set("kind", Kind)
-	return event
-}
-
-// Reporting represents a reporting event.
-type ReportingEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

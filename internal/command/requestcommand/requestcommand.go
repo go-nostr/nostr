@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/client"
+	"github.com/go-nostr/nostr/message"
 	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
@@ -30,8 +30,6 @@ type RequestCommand struct {
 	flagSet        *flag.FlagSet
 	relay          string
 	subscriptionID string
-	// TODO: add filter parameter parsing
-	// filter         *nostr.Filter
 }
 
 func (c *RequestCommand) Init(args []string) error {
@@ -45,9 +43,9 @@ func (c *RequestCommand) Name() string {
 func (c *RequestCommand) Run() error {
 	ctx := context.Background()
 	content := make(chan []byte)
-	mess := requestmessage.New(c.subscriptionID, &nostr.Filter{})
-	c.client.HandleMessageFunc(func(mess nostr.Message) {
-		if string(mess.Type()) == "EVENT" {
+	mess := requestmessage.New(c.subscriptionID, &requestmessage.Filter{})
+	c.client.HandleMessageFunc(func(mess *message.Message) {
+		if mess.Values()[0].(string) == "EVENT" {
 			fmt.Printf("%s:\n\n%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
 		}
 	})
@@ -55,7 +53,7 @@ func (c *RequestCommand) Run() error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	if err := c.client.Publish(mess); err != nil {
+	if err := c.client.Publish(ctx, mess); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

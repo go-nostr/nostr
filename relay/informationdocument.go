@@ -1,4 +1,4 @@
-package nostr
+package relay
 
 import "github.com/go-nostr/nostr/tag"
 

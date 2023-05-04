@@ -6,13 +6,6 @@ import "github.com/go-nostr/nostr/message"
 const Type = "CLOSE"
 
 // New creates a new CloseMessage.
-func New() *CloseMessage {
-	mess := &CloseMessage{&message.Message{}}
-	mess.Push(Type)
-	return mess
-}
-
-// CloseMessage is a specialized message type for closing a connection.
-type CloseMessage struct {
-	*message.Message
+func New() *message.Message {
+	return message.New(Type)
 }

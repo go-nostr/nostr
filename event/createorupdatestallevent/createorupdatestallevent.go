@@ -8,13 +8,6 @@ import (
 const Kind = 30017
 
 // New creates a new CreateOrUpdateStallEvent.
-func New() *CreateOrUpdateStallEvent {
-	event := &CreateOrUpdateStallEvent{}
-	event.Set("kind", Kind)
-	return event
-}
-
-// CreateOrUpdateStall represents a create or update stall event.
-type CreateOrUpdateStallEvent struct {
-	*event.Event
+func New() *event.Event {
+	return &event.Event{}
 }

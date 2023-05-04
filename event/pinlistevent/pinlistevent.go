@@ -6,13 +6,6 @@ import "github.com/go-nostr/nostr/event"
 const Kind = 10001
 
 // New creates a new PinListEvent.
-func New() *PinListEvent {
-	event := &PinListEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	return event
-}
-
-// PinList represents a pin list event.
-type PinListEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }
