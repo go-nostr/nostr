@@ -43,7 +43,7 @@ type Relay struct {
 	err                            chan error
 	errHandlerFunc                 func(err error)
 	internetIdentifierHandlerFunc  func(name string) (*InternetIdentifier, error)
-	mess                           chan *message.Message
+	mess                           chan message.Message
 	messHandler                    message.Handler
 	informationDocumentHandlerFunc func() (*InformationDocument, error)
 	serveMux                       *http.ServeMux
@@ -77,7 +77,7 @@ func (rl *Relay) HandleMessage(handler message.Handler) {
 }
 
 // HandleMessageFunc registers the message handler function for the given message type.
-func (rl *Relay) HandleMessageFunc(handler func(mess *message.Message)) {
+func (rl *Relay) HandleMessageFunc(handler func(mess message.Message)) {
 	rl.messHandler = message.HandlerFunc(handler)
 }
 
@@ -174,7 +174,7 @@ func (rl *Relay) listenConn(ctx context.Context, conn *websocket.Conn) {
 			rl.err <- err
 			return
 		}
-		rl.mess <- &mess
+		rl.mess <- mess
 		select {
 		case err := <-rl.err:
 			go rl.errHandlerFunc(err)

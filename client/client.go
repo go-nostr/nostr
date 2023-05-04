@@ -29,7 +29,7 @@ type Client struct {
 	conns          map[*websocket.Conn]struct{}
 	err            chan error
 	errHandlerFunc func(err error)
-	mess           chan *message.Message
+	mess           chan message.Message
 	messHandler    message.Handler
 	mu             sync.Mutex
 }
@@ -45,7 +45,7 @@ func (cl *Client) HandleMessage(handler message.Handler) {
 }
 
 // HandleMessageFunc TODO
-func (cl *Client) HandleMessageFunc(handler func(mess *message.Message)) {
+func (cl *Client) HandleMessageFunc(handler func(mess message.Message)) {
 	cl.messHandler = message.HandlerFunc(handler)
 }
 
@@ -63,7 +63,7 @@ func (cl *Client) Listen(ctx context.Context) error {
 }
 
 // Publish TODO
-func (cl *Client) Publish(ctx context.Context, mess *message.Message) error {
+func (cl *Client) Publish(ctx context.Context, mess message.Message) error {
 	data, err := mess.Marshal()
 	if err != nil {
 		cl.err <- err
@@ -121,7 +121,7 @@ func (cl *Client) listenConnection(ctx context.Context, conn *websocket.Conn) {
 			cl.err <- err
 			return
 		}
-		cl.mess <- &mess
+		cl.mess <- mess
 	}
 }
 

@@ -10,11 +10,11 @@ import (
 func Test_New(t *testing.T) {
 	tests := []struct {
 		name   string
-		expect *tag.Tag
+		expect tag.Tag
 	}{
 		{
 			name:   "MUST create a new tag",
-			expect: &tag.Tag{},
+			expect: tag.Tag{},
 		},
 	}
 	for _, tt := range tests {
@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 
 func TestTag_Marshal(t *testing.T) {
 	type fields struct {
-		tag *tag.Tag
+		tag tag.Tag
 	}
 	tests := []struct {
 		name   string
@@ -40,7 +40,7 @@ func TestTag_Marshal(t *testing.T) {
 		{
 			name: "MUST marshal tag",
 			fields: fields{
-				tag: &tag.Tag{"type"},
+				tag: tag.Tag{"type"},
 			},
 			expect: []byte("[\"type\"]"),
 		},
@@ -64,13 +64,13 @@ func TestTag_Push(t *testing.T) {
 		v any
 	}
 	type fields struct {
-		tag *tag.Tag
+		tag tag.Tag
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect *tag.Tag
+		expect tag.Tag
 	}{
 		{
 			name: "MUST push new element into tag",
@@ -78,9 +78,9 @@ func TestTag_Push(t *testing.T) {
 				v: "type",
 			},
 			fields: fields{
-				tag: &tag.Tag{},
+				tag: tag.Tag{},
 			},
-			expect: &tag.Tag{"type"},
+			expect: tag.Tag{"type"},
 		},
 	}
 	for _, tt := range tests {
@@ -99,13 +99,13 @@ func TestTag_Unmarshal(t *testing.T) {
 		data []byte
 	}
 	type fields struct {
-		tag *tag.Tag
+		tag tag.Tag
 	}
 	tests := []struct {
 		name   string
 		args   args
 		fields fields
-		expect *tag.Tag
+		expect tag.Tag
 	}{
 		{
 			name: "MUST unmarshal tag",
@@ -113,9 +113,9 @@ func TestTag_Unmarshal(t *testing.T) {
 				data: []byte("[\"type\"]"),
 			},
 			fields: fields{
-				tag: &tag.Tag{},
+				tag: tag.Tag{},
 			},
-			expect: &tag.Tag{"type"},
+			expect: tag.Tag{"type"},
 		},
 	}
 	for _, tt := range tests {
@@ -134,7 +134,7 @@ func TestTag_Unmarshal(t *testing.T) {
 
 func TestTag_Values(t *testing.T) {
 	type fields struct {
-		tag *tag.Tag
+		tag tag.Tag
 	}
 	tests := []struct {
 		name   string
@@ -144,7 +144,7 @@ func TestTag_Values(t *testing.T) {
 		{
 			name: "MUST get tag values",
 			fields: fields{
-				tag: &tag.Tag{"type"},
+				tag: tag.Tag{"type"},
 			},
 			expect: []any{"type"},
 		},

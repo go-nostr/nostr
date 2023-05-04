@@ -15,7 +15,7 @@ type Options struct {
 }
 
 // New creates a new "AUTH" message
-func New(opt *Options) *message.Message {
+func New(opt *Options) message.Message {
 	if opt.Challenge != "" {
 		return message.New(Type, opt.Challenge)
 	}

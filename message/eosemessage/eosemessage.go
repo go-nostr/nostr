@@ -6,6 +6,6 @@ import (
 
 const Type = "EOSE"
 
-func New() *message.Message {
+func New() message.Message {
 	return message.New(Type)
 }

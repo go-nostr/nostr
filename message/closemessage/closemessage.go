@@ -6,6 +6,6 @@ import "github.com/go-nostr/nostr/message"
 const Type = "CLOSE"
 
 // New creates a new CloseMessage.
-func New() *message.Message {
+func New() message.Message {
 	return message.New(Type)
 }

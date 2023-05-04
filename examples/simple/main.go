@@ -32,7 +32,7 @@ func main() {
 	// Publish a request message to the relay to establish connection
 	cl.Publish(ctx, requestmessage.New(sid, &requestmessage.Filter{}))
 	// Handle the End Of Subscription Epoch (EOSE) message, which indicates the end of a subscription epoch
-	cl.HandleMessageFunc(func(mess *message.Message) {
+	cl.HandleMessageFunc(func(mess message.Message) {
 		vals := mess.Values()
 		sid, ok := vals[1].(string)
 		if !ok {
