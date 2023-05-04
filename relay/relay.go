@@ -19,8 +19,8 @@ func New(opt *Options) *Relay {
 		conn:     make(map[*websocket.Conn]struct{}),
 		serveMux: new(http.ServeMux),
 	}
-	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.internetIdentifierHandlerFunc)
-	rl.serveMux.HandleFunc("/", rl.getConnectionHandlerFunc)
+	rl.serveMux.HandleFunc("/.well-known/nostr.json", rl.getInternetIdentifierHandlerFunc)
+	rl.serveMux.HandleFunc("/", rl.getRootHandlerFunc)
 	return rl
 }
 
@@ -40,12 +40,15 @@ type Options struct {
 type Relay struct {
 	*Options
 
-	errHandlerFunc func(err error)
-	messHandler    message.Handler
-	names          map[string]string
-	serveMux       *http.ServeMux
-	conn           map[*websocket.Conn]struct{}
-	mu             sync.Mutex
+	err                            chan error
+	errHandlerFunc                 func(err error)
+	internetIdentifierHandlerFunc  func(name string) (*InternetIdentifier, error)
+	mess                           chan *message.Message
+	messHandler                    message.Handler
+	informationDocumentHandlerFunc func() (*InformationDocument, error)
+	serveMux                       *http.ServeMux
+	conn                           map[*websocket.Conn]struct{}
+	mu                             sync.Mutex
 }
 
 // Handle registers the handler for the given pattern.
@@ -61,6 +64,11 @@ func (rl *Relay) HandleErrorFunc(handler func(err error)) {
 // HandleFunc registers the handler function for the given pattern.
 func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, r *http.Request)) {
 	rl.serveMux.HandleFunc(pattern, handler)
+}
+
+// HandleInternetIdentifierFunc TBD
+func (rl *Relay) HandleInternetIdentifierFunc(handler func(name string) (*InternetIdentifier, error)) {
+	rl.internetIdentifierHandlerFunc = handler
 }
 
 // HandleMessage registers the message handler for the given message type.
@@ -101,47 +109,80 @@ func (rl *Relay) addConn(conn *websocket.Conn) {
 	rl.conn[conn] = struct{}{}
 }
 
-// internetIdentifierHandlerFunc handles the /.well-known/nostr.json route.
+// getInternetIdentifierHandlerFunc handles the /.well-known/nostr.json route.
 // It serves the public key of the relay associated with the provided name query.
-func (rl *Relay) internetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Request) {
+func (rl *Relay) getInternetIdentifierHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("{\"%v\":\"%v\"}", name, rl.names[name])))
+	ii, err := rl.internetIdentifierHandlerFunc(name)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(200)
+	data, err := json.Marshal(ii)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	w.Write(data)
 }
 
-// getConnectionHandlerFunc handles the root route ("/") and upgrades the
+// getRootHandlerFunc handles the root route ("/") and upgrades the
 // HTTP request to a websocket connection.
-func (rl *Relay) getConnectionHandlerFunc(w http.ResponseWriter, r *http.Request) {
+func (rl *Relay) getRootHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Accept") == "application/nostr+json" {
+		infoDoc, err := rl.informationDocumentHandlerFunc()
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		data, err := json.Marshal(infoDoc)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Write(data)
+	}
 	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	rl.addConn(conn)
-	go rl.listenConn(conn)
+	go rl.listenConn(context.Background(), conn)
 }
 
 // listenConn listens for messages on the provided websocket connection,
 // decodes them, and dispatches them to the appropriate message handler.
-func (rl *Relay) listenConn(conn *websocket.Conn) {
-	ctx := context.Background()
+func (rl *Relay) listenConn(ctx context.Context, conn *websocket.Conn) {
 	defer rl.removeConn(conn)
 	for {
-		_, r, err := conn.Reader(ctx)
+		typ, r, err := conn.Reader(ctx)
 		if err != nil {
+			rl.err <- err
 			return
 		}
-		// TODO: add websocket mess. type handling
+		if typ != websocket.MessageText {
+			rl.err <- fmt.Errorf("invalid message type")
+			return
+		}
 		var mess message.Message
 		if err := json.NewDecoder(r).Decode(&mess); err != nil {
+			rl.err <- err
 			return
 		}
-		if rl.messHandler == nil {
+		rl.mess <- &mess
+		select {
+		case err := <-rl.err:
+			go rl.errHandlerFunc(err)
+		case mess := <-rl.mess:
+			go rl.messHandler.Handle(mess)
+		case <-ctx.Done():
 			return
 		}
-		go rl.messHandler.Handle(&mess)
 	}
 }
 
