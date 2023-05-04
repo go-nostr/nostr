@@ -6,15 +6,6 @@ import (
 
 const Kind = 1
 
-// New creates a new short text note event.
-func New(content string) *ShortTextNoteEvent {
-	event := &ShortTextNoteEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	event.Set("content", content)
-	return event
-}
-
-// ShortTextNoteEvent represents a short text note event.
-type ShortTextNoteEvent struct {
-	*event.Event
+func New(content string) *event.Event {
+	return event.New(Kind, content)
 }

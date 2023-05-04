@@ -8,13 +8,6 @@ import (
 const Kind = 44
 
 // New creates a new ChannelMuteUserEvent.
-func New() *ChannelMuteUserEvent {
-	event := &ChannelMuteUserEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	return event
-}
-
-// ChannelMuteUser represents a user mute event in a channel.
-type ChannelMuteUserEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

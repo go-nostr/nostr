@@ -1,18 +1,23 @@
 package authmessage
 
-import "github.com/go-nostr/nostr/message"
+import (
+	"github.com/go-nostr/nostr/event"
+	"github.com/go-nostr/nostr/message"
+)
 
-// Type TBD
-const Type = "CLOSE"
+// Type for message "AUTH"
+const Type = "AUTH"
 
-// New creates a new AuthMessage.
-func New() *AuthMessage {
-	mess := &AuthMessage{&message.Message{}}
-	mess.Push(Type)
-	return mess
+// Options for creating a new "AUTH" message
+type Options struct {
+	Challenge string
+	Event     *event.Event
 }
 
-// AuthMessage is a specialized message type for closing a connection.
-type AuthMessage struct {
-	*message.Message
+// New creates a new "AUTH" message
+func New(opt *Options) *message.Message {
+	if opt.Challenge != "" {
+		return message.New(Type, opt.Challenge)
+	}
+	return message.New(Type, opt.Event)
 }

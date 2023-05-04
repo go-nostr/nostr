@@ -2,23 +2,13 @@ package categorizedbookmarklistevent
 
 import (
 	"github.com/go-nostr/nostr/event"
+	"github.com/go-nostr/nostr/tag"
 )
 
 // Kind for managing categorized bookmark list
 const Kind = 30001
 
-type Options struct{}
-
 // New creates a new CategorizedBookmarkListEvent.
-func New(opt *Options) *CategorizedBookmarkListEvent {
-	return &CategorizedBookmarkListEvent{
-		Event: event.New(&event.Options{
-			Kind: Kind,
-		}),
-	}
-}
-
-// CategorizedBookmarkList represents a categorized bookmark list event.
-type CategorizedBookmarkListEvent struct {
-	*event.Event
+func New(content string, tags ...tag.Tag) *event.Event {
+	return event.New(Kind, content, tags...)
 }

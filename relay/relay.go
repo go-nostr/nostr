@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/message"
 	"nhooyr.io/websocket"
 )
@@ -27,30 +26,36 @@ func New(opt *Options) *Relay {
 
 // Options holds the configuration options for a Relay instance.
 type Options struct {
-	Name          string             `json:"name,omitempty"`
-	Description   string             `json:"description,omitempty"`
-	PubKey        string             `json:"pub_key,omitempty"`
-	Contact       string             `json:"contact,omitempty"`
-	SupportedNIPs []int              `json:"supported_nips,omitempty"`
-	Software      string             `json:"software,omitempty"`
-	Version       string             `json:"version,omitempty"`
-	Limitations   *nostr.Limitations `json:"limitations,omitempty"`
+	Name          string
+	Description   string
+	PubKey        string
+	Contact       string
+	SupportedNIPs []int
+	Software      string
+	Version       string
+	Limitations   *Limitations
 }
 
 // Relay represents a websocket relay server with a set of options and handlers.
 type Relay struct {
 	*Options
 
-	messHandler nostr.MessageHandler
-	names       map[string]string
-	serveMux    *http.ServeMux
-	conn        map[*websocket.Conn]struct{}
-	mu          sync.Mutex
+	errHandlerFunc func(err error)
+	messHandler    message.Handler
+	names          map[string]string
+	serveMux       *http.ServeMux
+	conn           map[*websocket.Conn]struct{}
+	mu             sync.Mutex
 }
 
 // Handle registers the handler for the given pattern.
 func (rl *Relay) Handle(pattern string, handler http.Handler) {
 	rl.serveMux.Handle(pattern, handler)
+}
+
+// HandleError registers the handler for the given pattern.
+func (rl *Relay) HandleErrorFunc(handler func(err error)) {
+	rl.errHandlerFunc = handler
 }
 
 // HandleFunc registers the handler function for the given pattern.
@@ -59,17 +64,17 @@ func (rl *Relay) HandleFunc(pattern string, handler func(w http.ResponseWriter, 
 }
 
 // HandleMessage registers the message handler for the given message type.
-func (rl *Relay) HandleMessage(handler nostr.MessageHandler) {
+func (rl *Relay) HandleMessage(handler message.Handler) {
 	rl.messHandler = handler
 }
 
 // HandleMessageFunc registers the message handler function for the given message type.
-func (rl *Relay) HandleMessageFunc(handler func(mess nostr.Message)) {
-	rl.messHandler = nostr.MessageHandlerFunc(handler)
+func (rl *Relay) HandleMessageFunc(handler func(mess *message.Message)) {
+	rl.messHandler = message.HandlerFunc(handler)
 }
 
 // Publish broadcasts the given message to all connected clients.
-func (rl *Relay) Publish(mess nostr.Message) error {
+func (rl *Relay) Publish(mess *message.Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	data, err := mess.Marshal()

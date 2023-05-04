@@ -6,13 +6,6 @@ import "github.com/go-nostr/nostr/event"
 const Kind = 9735
 
 // New creates a new ZapEvent.
-func New() *ZapEvent {
-	event := &ZapEvent{&event.Event{}}
-	event.Set("kind", Kind)
-	return event
-}
-
-// Zap represents a zap event.
-type ZapEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

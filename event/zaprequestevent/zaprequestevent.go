@@ -6,13 +6,6 @@ import "github.com/go-nostr/nostr/event"
 const Kind = 9734
 
 // New creates a new ZapRequestEvent.
-func New() *ZapRequestEvent {
-	event := &ZapRequestEvent{}
-	event.Set("kind", Kind)
-	return event
-}
-
-// ZapRequest represents a zap request event.
-type ZapRequestEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

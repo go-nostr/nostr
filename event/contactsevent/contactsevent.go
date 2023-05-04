@@ -8,13 +8,6 @@ import (
 const Kind = 3
 
 // New creates a new contacts event.
-func New() *ContactsEvent {
-	event := &ContactsEvent{}
-	event.Set("kind", Kind)
-	return event
-}
-
-// ContactsEvent represents a contacts event.
-type ContactsEvent struct {
-	*event.Event
+func New() *event.Event {
+	return event.New(Kind, "")
 }

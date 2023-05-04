@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-nostr/nostr"
 	"github.com/go-nostr/nostr/client"
+	"github.com/go-nostr/nostr/message"
 	"github.com/go-nostr/nostr/message/requestmessage"
 )
 
@@ -30,9 +30,9 @@ func main() {
 	// Subscribe to the specified relay
 	cl.Subscribe(ctx, relay)
 	// Publish a request message to the relay to establish connection
-	cl.Publish(requestmessage.New(sid, &nostr.Filter{}))
+	cl.Publish(ctx, requestmessage.New(sid, &requestmessage.Filter{}))
 	// Handle the End Of Subscription Epoch (EOSE) message, which indicates the end of a subscription epoch
-	cl.HandleMessageFunc(func(mess nostr.Message) {
+	cl.HandleMessageFunc(func(mess *message.Message) {
 		vals := mess.Values()
 		sid, ok := vals[1].(string)
 		if !ok {
@@ -41,10 +41,8 @@ func main() {
 		fmt.Printf("EOSE:\t%s\n\n", sid)
 	})
 	// Continuously listen for incoming messages until the context is cancelled
-	for {
-		select {
-		case <-ctx.Done():
-			os.Exit(0)
-		}
+	if err := cl.Listen(ctx); err != nil {
+		fmt.Println("%w", err)
+		os.Exit(1)
 	}
 }

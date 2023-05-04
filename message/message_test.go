@@ -7,23 +7,23 @@ import (
 	"github.com/go-nostr/nostr/message"
 )
 
-func Test_NewMessage(t *testing.T) {
+func Test_New(t *testing.T) {
 	tests := []struct {
 		name   string
 		expect *message.Message
 	}{
 		{
-			name:   "MUST create a new Message with given type",
-			expect: &message.Message{[]byte("\"type\"")},
+			name:   "MUST create new message",
+			expect: &message.Message{"type"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mess := message.New("type")
-			if !reflect.DeepEqual(mess, tt.expect) {
-				t.Fatalf("expected %v, got %v", tt.expect, mess)
+			got := message.New("type")
+			if !reflect.DeepEqual(tt.expect, got) {
+				t.Fatalf("expected %v, got %v", tt.expect, got)
 			}
-			t.Logf("got %+v", mess)
+			t.Logf("got %v", got)
 		})
 	}
 }
@@ -41,7 +41,7 @@ func TestMessage_Marshal(t *testing.T) {
 		err    error
 	}{
 		{
-			name: "MUST create a new Message with given type",
+			name: "MUST marshal message",
 			args: args{},
 			fields: fields{
 				mess: message.New("type"),
@@ -63,31 +63,37 @@ func TestMessage_Marshal(t *testing.T) {
 	}
 }
 
-func TestMessage_Type(t *testing.T) {
+func TestMessage_Push(t *testing.T) {
+	type args struct {
+		elem any
+	}
 	type fields struct {
 		mess *message.Message
 	}
 	tests := []struct {
 		name   string
+		args   args
 		fields fields
-		expect []byte
-		err    error
+		expect *message.Message
 	}{
 		{
-			name: "MUST get type for raw message",
-			fields: fields{
-				mess: message.New("type"),
+			name: "MUST push value into message",
+			args: args{
+				elem: "type",
 			},
-			expect: []byte("type"),
+			fields: fields{
+				mess: message.New(),
+			},
+			expect: &message.Message{"type"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			typ := tt.fields.mess.Type()
-			if !reflect.DeepEqual(typ, tt.expect) {
+			tt.fields.mess.Push(tt.args.elem)
+			if !reflect.DeepEqual(tt.expect, tt.fields.mess) {
 				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
 			}
-			t.Logf("got %+v", tt.fields.mess)
+			t.Logf("got %v", tt.fields.mess)
 		})
 	}
 }
@@ -107,7 +113,7 @@ func TestMessage_Unmarshal(t *testing.T) {
 		err    error
 	}{
 		{
-			name: "MUST unmarshal Message",
+			name: "MUST unmarshal message",
 			args: args{
 				data: []byte("[\"type\"]"),
 			},
@@ -120,7 +126,7 @@ func TestMessage_Unmarshal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.mess.Unmarshal(tt.args.data)
-			if err != nil && tt.err == nil {
+			if tt.err != nil && err == nil {
 				t.Fatalf("expected error %v, got error %v", tt.err, err)
 			}
 			if !reflect.DeepEqual(tt.fields.mess, tt.expect) {
@@ -142,7 +148,7 @@ func TestMessage_Values(t *testing.T) {
 		err    error
 	}{
 		{
-			name: "MUST get type for raw message",
+			name: "MUST get values for raw message",
 			fields: fields{
 				mess: message.New("type"),
 			},
@@ -151,11 +157,11 @@ func TestMessage_Values(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := tt.fields.mess.Values()
-			if !reflect.DeepEqual(v, tt.expect) {
-				t.Fatalf("expected %v, got %v", tt.expect, tt.fields.mess)
+			got := tt.fields.mess.Values()
+			if !reflect.DeepEqual(tt.expect, got) {
+				t.Fatalf("expected %v, got %v", tt.expect, got)
 			}
-			t.Logf("got %+v", tt.fields.mess)
+			t.Logf("got %v", got)
 		})
 	}
 }
