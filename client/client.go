@@ -14,48 +14,49 @@ func New(opt *Options) *Client {
 	return &Client{
 		Options: opt,
 
-		err:   make(chan error),
-		conns: make(map[*websocket.Conn]struct{}),
+		err:  make(chan error),
+		conn: make(map[*websocket.Conn]struct{}),
 	}
 }
 
 // Options TODO
-type Options struct{}
+type Options struct {
+	ReadLimit int64
+}
 
 // Client TODO
 type Client struct {
 	*Options
 
-	conns          map[*websocket.Conn]struct{}
-	err            chan error
-	errHandlerFunc func(err error)
-	mess           chan message.Message
-	messHandler    message.Handler
-	mu             sync.Mutex
+	conn  map[*websocket.Conn]struct{}
+	err   chan error
+	errFn func(err error)
+	msg   chan message.Message
+	msgFn func(msg message.Message)
+	mu    sync.Mutex
 }
 
 // HandleError TODO
-func (cl *Client) HandleErrorFunc(handler func(err error)) {
-	cl.errHandlerFunc = handler
+func (cl *Client) HandleErrorFunc(fn func(err error)) {
+	cl.errFn = fn
 }
 
 // HandleMessage TODO
-func (cl *Client) HandleMessage(handler message.Handler) {
-	cl.messHandler = handler
-}
-
-// HandleMessageFunc TODO
-func (cl *Client) HandleMessageFunc(handler func(mess message.Message)) {
-	cl.messHandler = message.HandlerFunc(handler)
+func (cl *Client) HandleMessageFunc(fn func(msg message.Message)) {
+	cl.msgFn = fn
 }
 
 func (cl *Client) Listen(ctx context.Context) error {
 	for {
 		select {
 		case err := <-cl.err:
-			go cl.errHandlerFunc(err)
-		case mess := <-cl.mess:
-			go cl.messHandler.Handle(mess)
+			if cl.errFn != nil {
+				go cl.errFn(err)
+			}
+		case msg := <-cl.msg:
+			if cl.msgFn != nil {
+				go cl.msgFn(msg)
+			}
 		case <-ctx.Done():
 			return nil
 		}
@@ -63,65 +64,66 @@ func (cl *Client) Listen(ctx context.Context) error {
 }
 
 // Publish TODO
-func (cl *Client) Publish(ctx context.Context, mess message.Message) error {
-	data, err := mess.Marshal()
+func (cl *Client) Publish(ctx context.Context, msg message.Message) {
+	data, err := msg.Marshal()
 	if err != nil {
 		cl.err <- err
-		return err
 	}
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	for conn := range cl.conns {
+	for conn := range cl.conn {
 		if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
 			cl.err <- err
-			return err
 		}
 	}
-	return nil
 }
 
 // Subscribe TODO
-func (cl *Client) Subscribe(ctx context.Context, u string) error {
+func (cl *Client) Subscribe(ctx context.Context, u string) {
 	conn, _, err := websocket.Dial(ctx, u, &websocket.DialOptions{
 		CompressionMode: websocket.CompressionDisabled,
 	})
 	if err != nil {
 		cl.err <- err
-		return err
 	}
-	conn.SetReadLimit(6.4e+7)
-	if err != nil {
-		cl.err <- err
-		return err
+	if cl.Options != nil {
+		conn.SetReadLimit(cl.ReadLimit)
 	}
 	cl.addConnection(conn)
 	go cl.listenConnection(ctx, conn)
-	return nil
 }
 
 // addConnection TODO
 func (cl *Client) addConnection(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	cl.conns[conn] = struct{}{}
+	cl.conn[conn] = struct{}{}
 }
 
 // listenConnection TODO
 func (cl *Client) listenConnection(ctx context.Context, conn *websocket.Conn) {
 	defer cl.removeConnection(conn)
 	for {
-		_, r, err := conn.Reader(ctx)
+		typ, rdr, err := conn.Reader(ctx)
 		if err != nil {
-			cl.err <- err
+			go cl.errFn(err)
 			return
 		}
-		// TODO: add websocket mess. type handling
-		var mess message.Message
-		if err := json.NewDecoder(r).Decode(&mess); err != nil {
-			cl.err <- err
+		if typ != websocket.MessageText {
+			go cl.errFn(err)
 			return
 		}
-		cl.mess <- mess
+		var msg message.Message
+		if err := json.NewDecoder(rdr).Decode(&msg); err != nil {
+			go cl.errFn(err)
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			go cl.msgFn(msg)
+		}
 	}
 }
 
@@ -129,7 +131,7 @@ func (cl *Client) listenConnection(ctx context.Context, conn *websocket.Conn) {
 func (cl *Client) removeConnection(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
-	delete(cl.conns, conn)
+	delete(cl.conn, conn)
 	if err := conn.Close(websocket.StatusNormalClosure, "closing connection"); err != nil {
 		cl.err <- err
 	}

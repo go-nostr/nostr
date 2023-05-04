@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/go-nostr/nostr/client"
 	"github.com/go-nostr/nostr/message"
@@ -42,27 +41,17 @@ func (c *RequestCommand) Name() string {
 
 func (c *RequestCommand) Run() error {
 	ctx := context.Background()
-	content := make(chan []byte)
-	mess := requestmessage.New(c.subscriptionID, &requestmessage.Filter{})
-	c.client.HandleMessageFunc(func(mess message.Message) {
-		if mess.Values()[0].(string) == "EVENT" {
-			fmt.Printf("%s:\n\n%s\n\n", mess.Values()[2].(map[string]any)["pubkey"], mess.Values()[2].(map[string]any)["content"])
-		}
+	c.client.HandleErrorFunc(func(err error) {
+		fmt.Println(err.Error())
 	})
-	if err := c.client.Subscribe(ctx, c.relay); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	c.client.HandleMessageFunc(func(msg message.Message) {
+		fmt.Println(msg.Values()...)
+	})
+	c.client.Subscribe(ctx, c.relay)
+	msg := requestmessage.New(c.subscriptionID, &requestmessage.Filter{})
+	c.client.Publish(ctx, msg)
+	if err := c.client.Listen(ctx); err != nil {
+		return err
 	}
-	if err := c.client.Publish(ctx, mess); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	for {
-		select {
-		case byt := <-content:
-			fmt.Printf("%s\n\n", byt)
-		case <-ctx.Done():
-			os.Exit(0)
-		}
-	}
+	return nil
 }

@@ -65,5 +65,7 @@ func buildRequestCommand() *requestcommand.RequestCommand {
 // wire.go:
 
 func buildClient() *client.Client {
-	return client.New(nil)
+	return client.New(&client.Options{
+		ReadLimit: 2e6,
+	})
 }

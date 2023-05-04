@@ -16,7 +16,9 @@ import (
 )
 
 func buildClient() *client.Client {
-	return client.New(nil)
+	return client.New(&client.Options{
+		ReadLimit: 2e6,
+	})
 }
 
 func buildAuthCommand() *authcommand.AuthCommand {

@@ -34,9 +34,8 @@ func (m Message) Marshal() ([]byte, error) {
 }
 
 // Push appends a value to the Message after marshaling it into a JSON Message.
-func (m *Message) Push(v any) error {
+func (m *Message) Push(v any) {
 	*m = append(*m, v)
-	return nil
 }
 
 // Unmarshal unmarshals a JSON byte slice into a Message.
