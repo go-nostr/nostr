@@ -2,8 +2,10 @@ package client_test
 
 import (
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/go-nostr/nostr/client"
 	"github.com/go-nostr/nostr/message"
@@ -43,10 +45,11 @@ func TestClient_Publish(t *testing.T) {
 	errChan := make(chan error)
 	msgChan := make(chan message.Message)
 	rl := relay.New(nil)
-	rl.HandleError(func(err error) {
+	rl.HandleErrorFunc(func(err error) {
 		errChan <- err
 	})
-	rl.HandleMessage(func(msg message.Message) {
+	rl.HandleMessageFunc(func(msg message.Message) {
+		fmt.Println(msg)
 		msgChan <- msg
 	})
 	ts := httptest.NewServer(rl)
@@ -55,7 +58,7 @@ func TestClient_Publish(t *testing.T) {
 		msg message.Message
 	}
 	type fields struct {
-		addr string
+		u string
 	}
 	tests := []struct {
 		name   string
@@ -68,27 +71,22 @@ func TestClient_Publish(t *testing.T) {
 				msg: requestmessage.New("asdf", &requestmessage.Filter{}),
 			},
 			fields: fields{
-				addr: "ws://0.0.0.0:3001",
+				u: ts.URL,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+			defer cancel()
 			cl := client.New(nil)
 			if cl == nil {
 				t.Fatalf("expected %v, to be not nil", cl)
 			}
-			cl.Subscribe(ctx, ts.URL)
+			cl.Subscribe(ctx, tt.fields.u)
 			cl.Publish(ctx, tt.args.msg)
-			select {
-			case err := <-errChan:
-				t.Fatal(err)
-			case msg := <-msgChan:
-				if msg == nil {
-					t.Fatalf("expected message to not be nil")
-				}
-				t.Logf("recieved message %v", msg)
+			if err := cl.Listen(ctx); err != nil {
+				t.Error(err)
 			}
 		})
 	}

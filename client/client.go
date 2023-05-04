@@ -46,6 +46,7 @@ func (cl *Client) HandleMessageFunc(fn func(msg message.Message)) {
 	cl.msgFn = fn
 }
 
+// Listen TODO
 func (cl *Client) Listen(ctx context.Context) error {
 	for {
 		select {
@@ -89,20 +90,20 @@ func (cl *Client) Subscribe(ctx context.Context, u string) {
 	if cl.Options != nil {
 		conn.SetReadLimit(cl.ReadLimit)
 	}
-	cl.addConnection(conn)
-	go cl.listenConnection(ctx, conn)
+	cl.addConn(conn)
+	go cl.listenConn(ctx, conn)
 }
 
 // addConnection TODO
-func (cl *Client) addConnection(conn *websocket.Conn) {
+func (cl *Client) addConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	cl.conn[conn] = struct{}{}
 }
 
 // listenConnection TODO
-func (cl *Client) listenConnection(ctx context.Context, conn *websocket.Conn) {
-	defer cl.removeConnection(conn)
+func (cl *Client) listenConn(ctx context.Context, conn *websocket.Conn) {
+	defer cl.removeConn(conn)
 	for {
 		typ, rdr, err := conn.Reader(ctx)
 		if err != nil {
@@ -128,7 +129,7 @@ func (cl *Client) listenConnection(ctx context.Context, conn *websocket.Conn) {
 }
 
 // removeConnection TODO
-func (cl *Client) removeConnection(conn *websocket.Conn) {
+func (cl *Client) removeConn(conn *websocket.Conn) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	delete(cl.conn, conn)

@@ -14,9 +14,12 @@ import (
 
 // New creates and initializes a new Relay instance with the given Options.
 func New(opt *Options) *Relay {
+	if opt == nil {
+		opt = new(Options)
+	}
 	rl := &Relay{
 		Options: opt,
-		cxn:     make(map[*websocket.Conn]struct{}),
+		conn:    make(map[*websocket.Conn]struct{}),
 		mux:     new(http.ServeMux),
 	}
 	rl.mux.HandleFunc("/.well-known/nostr.json", rl.getInternetIdentifierHandlerFunc)
@@ -40,7 +43,7 @@ type Options struct {
 type Relay struct {
 	*Options
 
-	cxn       map[*websocket.Conn]struct{}
+	conn      map[*websocket.Conn]struct{}
 	err       chan error
 	errFn     func(err error)
 	infoDocFn func() (*InformationDocument, error)
@@ -52,7 +55,7 @@ type Relay struct {
 }
 
 // HandleError registers the handler for the given pattern.
-func (rl *Relay) HandleError(fn func(err error)) {
+func (rl *Relay) HandleErrorFunc(fn func(err error)) {
 	rl.errFn = fn
 }
 
@@ -62,7 +65,7 @@ func (rl *Relay) HandleInternetIdentifierFunc(fn func(name string) (*InternetIde
 }
 
 // HandleMessage registers the message handler function for the given message type.
-func (rl *Relay) HandleMessage(fn func(msg message.Message)) {
+func (rl *Relay) HandleMessageFunc(fn func(msg message.Message)) {
 	rl.msgFn = fn
 }
 
@@ -76,7 +79,7 @@ func (rl *Relay) Publish(msg message.Message) {
 	}
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	for c := range rl.cxn {
+	for c := range rl.conn {
 		go c.Write(ctx, websocket.MessageText, data)
 	}
 }
@@ -87,12 +90,13 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // addConnection adds the given websocket connection to the set of active connections.
-func (rl *Relay) addConnection(cxn *websocket.Conn) {
+func (rl *Relay) addConnection(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	rl.cxn[cxn] = struct{}{}
+	rl.conn[conn] = struct{}{}
 }
 
+// getInformationDocumentHandlerFunc TBD
 func (rl *Relay) getInformationDocumentHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	infoDoc, err := rl.infoDocFn()
 	if err != nil {
@@ -185,9 +189,9 @@ func (rl *Relay) listenConnection(ctx context.Context, conn *websocket.Conn) {
 
 // removeConnection removes the given websocket connection from the set of active connections
 // and closes the connection with a normal closure status.
-func (rl *Relay) removeConnection(cxn *websocket.Conn) {
+func (rl *Relay) removeConnection(conn *websocket.Conn) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	delete(rl.cxn, cxn)
-	cxn.Close(websocket.StatusNormalClosure, "closing connection")
+	delete(rl.conn, conn)
+	conn.Close(websocket.StatusNormalClosure, "closing connection")
 }

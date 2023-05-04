@@ -18,7 +18,6 @@ jobs:
         run: npm run test -w internal/web --watch=false --browsers=ChromeHeadless
       - name: Run Angular linter
         run: npm run lint -w internal/web
-      # TODO: change name of artifact
       - name: Tar files
         run: tar -cvf dist.tar internal/web/dist
       - name: Upload Angular build artifacts
