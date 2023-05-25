@@ -8,16 +8,10 @@ import (
 // Type for message "AUTH"
 const Type = "AUTH"
 
-// Options for creating a new "AUTH" message
-type Options struct {
-	Challenge string
-	Event     *event.Event
-}
-
 // New creates a new "AUTH" message
-func New(opt *Options) message.Message {
-	if opt.Challenge != "" {
-		return message.New(Type, opt.Challenge)
+func New(challenge string, evt *event.Event) message.Message {
+	if evt != nil {
+		return message.New(Type, evt)
 	}
-	return message.New(Type, opt.Event)
+	return message.New(Type, challenge)
 }

@@ -11,37 +11,34 @@ import (
 
 func Test_New(t *testing.T) {
 	type args struct {
-		opt *authmessage.Options
+		challenge string
+		evt       *event.Event
 	}
 	tests := []struct {
-		name   string
-		args   args
-		expect message.Message
+		name string
+		args args
+		want message.Message
 	}{
 		{
 			name: "MUST create new auth message with challenge",
 			args: args{
-				opt: &authmessage.Options{
-					Challenge: "challenge",
-				},
+				challenge: "challenge",
 			},
-			expect: message.Message{authmessage.Type, "challenge"},
+			want: message.Message{authmessage.Type, "challenge"},
 		},
 		{
 			name: "MUST create new auth message with event",
 			args: args{
-				opt: &authmessage.Options{
-					Event: event.New(0, ""),
-				},
+				evt: event.New(0, ""),
 			},
-			expect: message.Message{authmessage.Type, event.New(0, "")},
+			want: message.Message{authmessage.Type, event.New(0, "")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := authmessage.New(tt.args.opt)
-			if !reflect.DeepEqual(tt.expect, got) {
-				t.Errorf("expected %v, got %v", tt.expect, got)
+			got := authmessage.New(tt.args.challenge, tt.args.evt)
+			if !reflect.DeepEqual(tt.want, got) {
+				t.Errorf("wanted %v, got %v", tt.want, got)
 			}
 			t.Logf("got %v", got)
 		})

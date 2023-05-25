@@ -47,9 +47,9 @@ func (c *RequestCommand) Run() error {
 	c.client.HandleMessageFunc(func(msg message.Message) {
 		fmt.Println(msg.Values()...)
 	})
-	c.client.Subscribe(ctx, c.relay)
+	c.client.Connect(ctx, c.relay)
 	msg := requestmessage.New(c.subscriptionID, &requestmessage.Filter{})
-	c.client.Publish(ctx, msg)
+	c.client.SendMessage(ctx, msg)
 	if err := c.client.Listen(ctx); err != nil {
 		return err
 	}

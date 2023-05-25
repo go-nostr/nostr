@@ -16,7 +16,7 @@ type Metadata struct {
 const Kind = 0
 
 // New creates a new metadata event
-func New(name string, about string, picture string) (*event.Event, error) {
+func New(name string, about string, picture string) *event.Event {
 	metadata := &Metadata{
 		About:   about,
 		Name:    name,
@@ -24,24 +24,24 @@ func New(name string, about string, picture string) (*event.Event, error) {
 	}
 	data, err := json.Marshal(metadata)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return event.New(Kind, string(data)), nil
+	return event.New(Kind, string(data))
 }
 
-func GetMetadata(evnt *event.Event) (*Metadata, error) {
+func GetMetadata(evt *event.Event) (*Metadata, error) {
 	var metadata Metadata
-	if err := json.Unmarshal([]byte(evnt.Content), &metadata); err != nil {
+	if err := json.Unmarshal([]byte(evt.Content), &metadata); err != nil {
 		return nil, err
 	}
 	return &metadata, nil
 }
 
-func Validate(evnt *event.Event) error {
-	if _, err := GetMetadata(evnt); err != nil {
+func Validate(evt *event.Event) error {
+	if _, err := GetMetadata(evt); err != nil {
 		return err
 	}
-	if err := evnt.Verify(); err != nil {
+	if err := evt.Verify(); err != nil {
 		return err
 	}
 	return nil
