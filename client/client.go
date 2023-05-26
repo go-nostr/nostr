@@ -14,6 +14,12 @@ import (
 // It sets up channels for errors and messages, default handlers for errors and messages,
 // and a map for active WebSocket connections.
 func New(opt *Options) *Client {
+	if opt == nil {
+		opt = &Options{}
+	}
+	if opt.ReadLimit == 0 {
+		opt.ReadLimit = 2e6
+	}
 	return &Client{
 		Options: opt,
 
