@@ -26,10 +26,15 @@ func main() {
 	flag.Parse()
 	// Create a context for managing the lifecycle of the Nostr client
 	ctx := context.Background()
-	cl := client.New(nil)
+	cl := client.New(&client.Options{
+		ReadLimit: 2e6,
+	})
 	// Connect to the specified relay
 	cl.Connect(ctx, u)
 	// Send a request message to the relay to establish connection
+	cl.HandleErrorFunc(func(err error) {
+		fmt.Println(err.Error())
+	})
 	cl.HandleMessageFunc(func(msg message.Message) {
 		fmt.Println(msg)
 	})
