@@ -13,7 +13,7 @@ func Test_New(t *testing.T) {
 		expect tag.Tag
 	}{
 		{
-			name:   "MUST create a new tag",
+			name:   "SHOULD construct instance of tag",
 			expect: tag.Tag{},
 		},
 	}
@@ -38,7 +38,7 @@ func TestTag_Marshal(t *testing.T) {
 		fields fields
 	}{
 		{
-			name: "MUST marshal tag",
+			name: "SHOULD marshal tag",
 			fields: fields{
 				tag: tag.Tag{"type"},
 			},
@@ -73,7 +73,7 @@ func TestTag_Push(t *testing.T) {
 		expect tag.Tag
 	}{
 		{
-			name: "MUST push new element into tag",
+			name: "SHOULD push new element into tag",
 			args: args{
 				v: "type",
 			},
@@ -108,7 +108,7 @@ func TestTag_Unmarshal(t *testing.T) {
 		expect tag.Tag
 	}{
 		{
-			name: "MUST unmarshal tag",
+			name: "SHOULD unmarshal tag",
 			args: args{
 				data: []byte("[\"type\"]"),
 			},
@@ -142,7 +142,7 @@ func TestTag_Values(t *testing.T) {
 		expect []any
 	}{
 		{
-			name: "MUST get tag values",
+			name: "SHOULD get tag values",
 			fields: fields{
 				tag: tag.Tag{"type"},
 			},

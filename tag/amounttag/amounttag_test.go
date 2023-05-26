@@ -18,7 +18,7 @@ func Test_New(t *testing.T) {
 		expect *tag.Tag
 	}{
 		{
-			name: "SHOULD create new tag.Tag",
+			name: "SHOULD construct instance of Tag using amount type and value",
 			args: args{
 				amount: 1984,
 			},
@@ -43,7 +43,7 @@ func Test_Type(t *testing.T) {
 		expect string
 	}{
 		{
-			name:   "SHOULD expect type to equal 'amount'",
+			name:   "SHOULD expect Type to equal amount",
 			expect: "amount",
 		},
 	}

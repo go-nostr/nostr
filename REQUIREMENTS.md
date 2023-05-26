@@ -4,275 +4,378 @@
 
 ### Purpose
 
-The purpose of this requirements document is to outline the necessary features, functionality, and specifications for the Nostr Implementation Possibilities (NIPs) monorepo. This document will serve as a reference for contributors, developers, and users who are interested in understanding the scope of the project, its goals, and the expectations for implementing and interacting with the monorepo.
+This document defines the necessary features, functionality, and specifications for the go-nostr/nostr monorepo. It is intended for contributors, developers, and users who wish to understand the scope and objectives of the project, and the expectations for interacting with the monorepo.
 
-By providing clear and comprehensive requirements, we aim to facilitate effective collaboration, efficient development, and a consistent understanding of the project among all stakeholders. This document will guide the design, implementation, and maintenance of the monorepo to ensure it meets the needs of the Nostr community and adheres to the principles outlined in the NIPs.
+This document aims to:
+
+1. Facilitate effective collaboration among stakeholders
+2. Enhance development efficiency
+3. Foster a shared understanding of the project
+4. Guide the design, implementation, and maintenance of the monorepo
+
+The requirements herein are intended to ensure the monorepo satisfies the Nostr community's needs and adheres to the principles outlined in the Nostr Improvement Proposals (NIPs).
 
 ### Scope
 
-This requirements document focuses on the development of the go-nostr software, a Nostr-compatible implementation that includes both relay and client functionalities. The software will provide the necessary features and tools for developers and users to interact with the Nostr protocol, allowing for the creation and management of events, as well as communication between clients and relays. The go-nostr software aims to streamline the development of Nostr-compatible applications, promote the adoption of the Nostr network, and support the growth of the decentralized social platform. While not covering the implementation of every single NIP, it will focus on core functionalities and selected NIPs that are essential for a functional and robust Nostr system.
+This document outlines the requirements for the go-nostr/nostr software, a Nostr-compatible implementation that encompasses both relay and client functionalities.
+
+The go-nostr/nostr software:
+
+- The system MUST provide essential features and tools for developers and users to interact with the Nostr protocol
+- The system MUST enable the creation and management of events
+- The system MUST facilitate communication between clients and relays
+- The system SHOULD streamline the development of Nostr-compatible applications
+- The system SHOULD promote the adoption of the Nostr network
+- The system SHOULD support the growth of a decentralized social platform
+
+However, the go-nostr/nostr software:
+
+- The system MAY NOT implement every single Nostr Improvement Proposal (NIP)
+- The system SHOULD Focus on core functionalities and selected NIPs crucial for a functional and robust Nostr system
+
+The aim of the go-nostr/nostr software is to enhance the user experience and expand the capabilities of the Nostr network. This aligns with the broader goals of the Nostr community and the guidelines outlined in higher-level specifications.
 
 ### Definitions, Acronyms, and Abbreviations
 
-TBD
+- **Monorepo**: A monolithic repository that stores all of an organization's deliverable code in a single repository.
+- **Nostr**: A decentralized social protocol.
+- **NIP**: Nostr Improvement Proposal, a design document providing information to the Nostr community, describing new features or processes.
+- **Relay**: A server that passes data from a source to a destination in a network.
+- **Client**: A computer program that sends requests to servers in a network for services to be performed.
+
+For further definitions and abbreviations related to the Nostr protocol, please refer to the [Nostr Glossary](https://github.com/nostr-protocol/nips).
 
 ### References
 
+- [Nostr Improvement Possibilities (NIPs)](https://github.com/nostr-protocol/nips)
 - [RFC 8615: Well-Known Uniform Resource Identifiers (URIs)](https://www.rfc-editor.org/rfc/rfc8615)
 
-### Overvierw
+### Overview
 
-TBD
+The go-nostr/nostr software is a Nostr-compatible implementation that provides both relay and client functionalities. It is designed to interact with the Nostr protocol and facilitates the creation, management of events, and communication between clients and relays. The purpose of this software is to simplify the development process of Nostr-compatible applications, promote the adoption of the Nostr network, and support the growth of the decentralized social platform.
+
+This requirements document provides a comprehensive list of features, functionalities, and specifications that guide the design, development, and maintenance of the go-nostr/nostr software. It serves as a reference for stakeholders including contributors, developers, and users, fostering a shared understanding of the project's objectives and expectations.
+
+While not covering every single Nostr Improvement Proposal (NIP), the focus of the go-nostr/nostr software is on the implementation of core functionalities and selected NIPs essential for a functional and robust Nostr system. This approach aligns with the broader goals of the Nostr community and adheres to the principles outlined in higher-level specifications.
+
+The requirements are set forth in Behavior-Driven Development (BDD) style to:
+
+- **MUST**: define the mandatory requirements.
+- **SHOULD**: specify the recommended but not obligatory requirements.
+- **MAY**: Provide optional requirements.
 
 ## Overall Description
 
 ### Product Perspective
 
-The go-nostr software is designed as a part of the Nostr network, which is a decentralized and extensible social protocol. The software acts as a bridge between Nostr-compatible applications, providing both relay and client functionalities to enable seamless communication across the network.
+The go-nostr/nostr software is a component of the Nostr network, a decentralized and extensible social protocol. It acts as a conduit for Nostr-compatible applications, offering both relay and client functionalities for seamless network communication.
 
 ### Product Functions
 
-go-nostr serves as a component of the Nostr network by facilitating event creation, management, and communication between clients and relays. It provides core functionalities and supports selected NIPs to streamline the development of Nostr-compatible applications and contribute to the network's growth.
+As a key component of the Nostr network, go-nostr/nostr:
+
+- The system MUST facilitate event creation and management.
+- The system MUST enable communication between clients and relays.
+- The system SHOULD provide core functionalities.
+- The system MAY support selected Nostr Improvement Proposals (NIPs) to enhance the development of Nostr-compatible applications and stimulate network growth.
 
 ### User Characteristics
 
-The primary users of go-nostr include contributors, developers, and end-users. Contributors are those who actively participate in the development process, while developers leverage the software to create Nostr-compatible applications. End-users, on the other hand, interact with the applications built upon go-nostr to access the Nostr network.
+go-nostr/nostr serves:
+
+- **Contributors**: Individuals actively involved in the development process.
+- **Developers**: Users who utilize the software to build Nostr-compatible applications.
+- **End-users**: Individuals who interact with applications built using go-nostr/nostr to access the Nostr network.
 
 ### Constraints
 
-go-nostr must adhere to the specifications outlined in the Nostr protocol and maintain compatibility with other Nostr implementations. Furthermore, it must be efficient, secure, and robust while providing a scalable and user-friendly solution.
+go-nostr/nostr adheres to the following constraints:
 
-| Status | NIP                                                                                                                                    |
-|--------|----------------------------------------------------------------------------------------------------------------------------------------|
-|        | [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)                                    |
-|        | [NIP-02: Contact List and Petnames](https://github.com/nostr-protocol/nips/blob/master/02.md)                                          |
-|        | [NIP-03: OpenTimestamps Attestations for Events](https://github.com/nostr-protocol/nips/blob/master/03.md)                             |
-|        | [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)                                           |
-|        | [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md)               |
-|        | [NIP-06: Basic key derivation from mnemonic seed phrase](https://github.com/nostr-protocol/nips/blob/master/06.md)                     |
-|        | [NIP-07: window.nostr capability for web browsers](https://github.com/nostr-protocol/nips/blob/master/07.md)                           |
-|        | [NIP-08: Handling Mentions --- unrecommended: deprecated in favor of NIP-27](https://github.com/nostr-protocol/nips/blob/master/08.md) |
-|        | [NIP-09: Event Deletion](https://github.com/nostr-protocol/nips/blob/master/09.md)                                                     |
-|        | [NIP-10: Conventions for clients' use of e and p tags in text events](https://github.com/nostr-protocol/nips/blob/master/10.md)        |
-|        | [NIP-11: Relay Information Document](https://github.com/nostr-protocol/nips/blob/master/11.md)                                         |
-|        | [NIP-12: Generic Tag Queries](https://github.com/nostr-protocol/nips/blob/master/12.md)                                                |
-|        | [NIP-13: Proof of Work](https://github.com/nostr-protocol/nips/blob/master/13.md)                                                      |
-|        | [NIP-14: Subject tag in text events](https://github.com/nostr-protocol/nips/blob/master/01.14).                                        |
-|        | [NIP-16: Event Treatment](https://github.com/nostr-protocol/nips/blob/master/16.md)                                                    |
-|        | [NIP-18: Reposts](https://github.com/nostr-protocol/nips/blob/master/18.md)                                                            |
-|        | [NIP-19: bech32-encoded entities](https://github.com/nostr-protocol/nips/blob/master/19.md)                                            |
-|        | [NIP-20: Command Results](https://github.com/nostr-protocol/nips/blob/master/20.md)                                                    |
-|        | [NIP-21: nostr: URL scheme](https://github.com/nostr-protocol/nips/blob/master/21.md)                                                  |
-|        | [NIP-22: Event created_at Limits](https://github.com/nostr-protocol/nips/blob/master/22.md)                                            |
-|        | [NIP-23: Long-form Content](https://github.com/nostr-protocol/nips/blob/master/23.md)                                                  |
-|        | [NIP-25: Reactions](https://github.com/nostr-protocol/nips/blob/master/25.md)                                                          |
-|        | [NIP-26: Delegated Event Signing](https://github.com/nostr-protocol/nips/blob/master/26.md)                                            |
-|        | [NIP-27: Text Note References](https://github.com/nostr-protocol/nips/blob/master/27.md)                                               |
-|        | [NIP-28: Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md)                                                        |
-|        | [NIP-33: Parameterized Replaceable Events](https://github.com/nostr-protocol/nips/blob/master/33.md)                                   |
-|        | [NIP-36: Sensitive Content](https://github.com/nostr-protocol/nips/blob/master/36.md)                                                  |
-|        | [NIP-39: External Identities in Profiles](https://github.com/nostr-protocol/nips/blob/master/39.md)                                    |
-|        | [NIP-40: Expiration Timestamp](https://github.com/nostr-protocol/nips/blob/master/40.md)                                               |
-|        | [NIP-42: Authentication of clients to relays](https://github.com/nostr-protocol/nips/blob/master/42.md)                                |
-|        | [NIP-45: Counting results](https://github.com/nostr-protocol/nips/blob/master/45.md)                                                   |
-|        | [NIP-46: Nostr Connect](https://github.com/nostr-protocol/nips/blob/master/46.md)                                                      |
-|        | [NIP-50: Keywords filter](https://github.com/nostr-protocol/nips/blob/master/50.md)                                                    |
-|        | [NIP-51: Lists](https://github.com/nostr-protocol/nips/blob/master/51.md)                                                              |
-|        | [NIP-56: Reporting](https://github.com/nostr-protocol/nips/blob/master/56.md)                                                          |
-|        | [NIP-57: Lightning Zaps](https://github.com/nostr-protocol/nips/blob/master/57.md)                                                     |
-|        | [NIP-58: Badges](https://github.com/nostr-protocol/nips/blob/master/58.md)                                                             |
-|        | [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md)                                                |
-|        | [NIP-78: Application-specific data](https://github.com/nostr-protocol/nips/blob/master/78.md)                                          |
+- The system MUST adhere to the Nostr protocol specifications.
+- The system MUST maintain compatibility with other Nostr implementations.
+- The system SHOULD be efficient, secure, and robust.
+- The system SHOULD provide a scalable and user-friendly solution.
 
 ### Assumptions and Dependencies
 
-The development of go-nostr assumes that the Nostr protocol will continue to evolve and incorporate new features and improvements. As such, the software's design must be flexible enough to accommodate these changes. Additionally, go-nostr depends on the stability and reliability of the Nostr network and its underlying infrastructure.
+The development of go-nostr/nostr assumes:
+
+- The Nostr protocol will continue to evolve, incorporating new features and improvements.
+- The software design will be flexible to accommodate changes.
+- The software depends on the stability and reliability of the Nostr network and its underlying infrastructure.
 
 ### Apportioning of Requirements
 
-This document focuses on the essential requirements for go-nostr. However, as the Nostr protocol evolves, new requirements may emerge. To ensure the software remains up-to-date and relevant, these requirements will be allocated to subsequent releases or iterations of the software.
+This document emphasizes essential requirements for go-nostr/nostr. As the Nostr protocol evolves, new requirements may arise. These will be allocated to future releases or iterations of the software to ensure its continuous relevance and update.
 
 ## Specific Requirements
 
 ### External Interfaces
 
+#### System Interfaces
+
+##### Get Well Known Internet Identifier Endpoint
+
+The system MUST return the internet identifier corresponding to the provided name query parameter.
+
+##### Establish Websocket Connection Endpoint
+
+The system MUST establish a Websocket connection between the client and relay to enable real-time data transmission.
+
 #### Software Interfaces
 
-##### API
+##### Basic Event Kinds
 
-###### GET /admin/health
+The system MUST support the `set_metadata`, `text_note`, and `recommend_server` basic event kinds.
 
-Returns the current health status of the service.
+##### List Filter Attributes
 
-###### GET /.well-known/nostr.json?name=local-part
+The system SHOULD support filter attributes containing lists (such as `ids`, `kinds`, or `#e`) as JSON arrays with one or more values.
 
-Returns the internet identifier for the given name query parameter.
+##### IDs and Authors List
 
-###### GET /
+The system SHOULD support `ids` and `authors` lists containing lowercase hexadecimal strings. These may either be an exact 64-character match or a prefix of the event value.
 
-Establishes a Websocket connection between client and relay.
+##### Filter Limit
+
+The system SHOULD Use the `limit` property of a filter for the initial query only. This can be ignored subsequently.
+
+##### Multiple Filters in Request Message
+
+The system MAY support that a `REQ` message can contain multiple filters. In this case, events that match any of the filters are to be returned (multiple filters are interpreted as `||` conditions).
+
+##### Event Schema
+
+The system MUST support the following event schema:
+
+```plain
+{
+  "id": <32-bytes lowercase hex-encoded sha256 of the serialized event data>,
+  "pubkey": <32-bytes lowercase hex-encoded public key of the event creator>,
+  "created_at": <unix timestamp in seconds>,
+  "kind": <integer>,
+  "tags": [
+    ["e", <32-bytes hex of the id of another event>, <recommended relay URL>],
+    ["p", <32-bytes hex of a pubkey>, <recommended relay URL>],
+    ... // other kinds of tags may be included later
+  ],
+  "content": <arbitrary string>,
+  "sig": <64-bytes hex of the signature of the sha256 hash of the serialized event data, which is the same as the "id" field>
+}
+```
+
+##### Event ID Calculation
+
+The system MUST support obtaining the event id by serializing the event and hashing it using sha256.
+
+##### Filter Matching
+
+The system MUST support obtaining the event id by serializing the event and hashing it using sha256.
+
+##### Subscription ID
+
+The system SHOULD support subscription_id as an arbitrary, non-empty string of max length 64 characters, which should be used to represent a subscription.
+
+##### Filter Schema
+
+The system SHOULD support filters as a JSON object that determines what events will be sent in that subscription:
+
+```plain
+{
+  "ids": <a list of event ids or prefixes>,
+  "authors": <a list of pubkeys or prefixes, the pubkey of an event must be one of these>,
+  "kinds": <a list of a kind numbers>,
+  "#e": <a list of event ids that are referenced in an "e" tag>,
+  "#p": <a list of pubkeys that are referenced in a "p" tag>,
+  "since": <an integer unix timestamp, events must be newer than this to pass>,
+  "until": <an integer unix timestamp, events must be older than this to pass>,
+  "limit": <maximum number of events to be returned in the initial query>
+}
+```
 
 #### User Interfaces
 
 ##### Account Settings Page Component
 
-Allows users to manage their account information and preferences.
+The system MUST enable users to manage their account information and preferences.
 
 ##### Add Relay Form Component
 
-Provides a form for users to add a new relay to their account.
+The system MUST provide a form for users to add a new relay to their account.
 
 ##### Appearance Settings Page Component
 
-Enables users to customize the look and feel of the application.
+The system MUST enable users to customize the application's look and feel.
 
 ##### Backup Settings Page Component
 
-Facilitates creating and managing backups of user data.
+The system MUST facilitate creating and managing backups of user data.
 
 ##### Create Short Text Note Event Component
 
-Allows users to create a brief text note within the application.
+The system MUST allow users to create a brief text note within the application.
 
 ##### Home Page Component
 
-Displays the main content and navigation options for users.
+The system MUST display the main content and navigation options for users.
 
 ##### Landing Page Component
 
-Introduces the application and prompts users to sign up or sign in.
+The system MUST introduce the application and prompt users to sign up or sign in.
 
 ##### List Events Component
 
-Displays a list of all events associated with the user's account.
+The system MUST display a list of all events associated with the user's account.
 
 ##### List Notifications Component
 
-Shows a list of recent notifications for the user.
+The system MUST show a list of recent notifications for the user.
 
 ##### List Relays Component
 
-Presents a list of all relays the user has added to their account.
+The system MUST present a list of all relays the user has added to their account.
 
 ##### Network Settings Page Component
 
-Enables users to configure network-related settings and preferences.
+The system MUST enable users to configure network-related settings and preferences.
 
 ##### Not Found Page Component
 
-Informs users that the requested page or resource could not be found.
+The system MUST inform users that the requested page or resource could not be found.
 
 ##### Notifications Page Component
 
-Displays an overview of the user's notifications and settings.
+The system MUST display an overview of the user's notifications and settings.
 
 ##### Profile Page Component
 
-Shows the user's profile information and allows them to edit it.
+The system MUST show the user's profile information and allow them to edit it.
 
 ##### Remove Relay Form Component
 
-Provides a form for users to remove a relay from their account.
+The system MUST provide a form for users to remove a relay from their account.
+
+##### Send Event Message Command
+
+The system MUST provide a command for users to send event messages within the application.
+
+##### Send Request Message Command
+
+The system MUST provide a command for users to send request messages within the application.
+
+##### Send Close Message Command
+
+The system MUST provide a command for users to send close messages within the application.
 
 ##### Sign In Page Component
 
-Prompts users to enter their credentials to access their account.
+The system MUST prompt users to enter their credentials to access their account.
 
 ##### Sign Out Form Component
 
-Provides a simple form for users to securely log out of their account and end their session.
+The system MUST provide a simple form for users to securely log out of their account and end their session.
 
 ##### Sign Up Page Component
 
-Allows new users to create an account for the application.
+The system MUST allow new users to create an account for the application.
 
 ### Functions
 
-#### Add Relay
+#### Close Connection on Close Message
 
-Allows users to add a new relay to their list of relays, enhancing network connectivity and redundancy.
+The system SHOULD close the connection upon receiving the CLOSE message with the same subscription_id.
 
-#### Admin Get Health
+#### Encode Event Signature
 
-Returns the current health status of the service implementing the healthcheck endpoint monitoring pattern.
+The system SHALL encode signatures, and public key according to the Schnorr signatures standard for the curve secp256k1.
 
-#### Copy Private Key
+#### Overwrite Subscription on Same Subscription ID
 
-Enables users to securely copy their private key to their clipboard for backup or other purposes.
+The system SHOULD overwrite the previous subscription upon receiving the REQ message with the same subscription_id.
 
-#### Copy Public Key
+#### Query Database on Request Message
 
-Enables users to copy their public key to their clipboard for sharing with others or for use in external applications.
+The system SHOULD query the relay internal database upon receiving a REQ message, return events that match the filter, store that filter, and send again all future events it receives to that same websocket until the websocket is closed.
 
-#### Get Connection
+#### Send Event Message from Client to Relay
 
-Get Connection is a product function that establishes a secure client-relay WebSocket connection. This allows clients to communicate with the server in real-time and enables bi-directional data transfer. The connection is encrypted using industry-standard TLS protocols to ensure the security of the communication. Additionally, the connection can be configured to automatically reconnect in case of network disruptions or server downtime, ensuring a reliable connection. This feature is particularly useful for applications that require real-time updates or collaborative features, such as multiplayer games or collaborative editing tools.
+The system SHALL be able to send "EVENT" messages from client to relay and publish events.
 
-#### Get Internet Identifier
+#### Send Request Message from Client to Relay
 
-Returns the internet identifier for a given name and optionally relays, if enabled. Supports NIP-05.
+The system SHALL be able to send "REQ" messages from client to relay and create subscriptions.
 
-#### List Events
+#### Send Close Message from Client to Relay
 
-Displays a list of events, including their details, for the user to browse and interact with.
+The system SHALL be able to send "CLOSE" messages from client to relay and stop previous subscriptions.
 
-#### List Notifications
+#### Send Event Message from Relay to Client
 
-Shows a list of notifications received by the user, allowing them to stay informed about important updates or messages.
+The system SHALL be able to send "EVENT" messages from relay to client and send events requested by clients.
 
-#### List Relays
+#### Send End of Stored Events Message from Relay to Client
 
-Displays a list of relays currently being used by the user, providing an overview of network connectivity.
+The system SHALL be able to send "EOSE" messages from relay to client and indicate the end of stored events.
 
-#### Publish Message
+#### Send Notice Message from Relay to Client
 
-Enables users to create and publish messages to the network, allowing them to share information and communicate with others.
-
-#### Remove Relay
-
-Allows users to remove a relay from their list of relays, providing control over network connectivity options.
-
-#### Sign In
-
-Enables users to securely log in to their account by providing their credentials.
-
-#### Sign Out
-
-Allows users to securely log out of their account and end their session.
-
-#### Sign Up
-
-Enables new users to create an account by providing the necessary information and agreeing to terms of service.
+The system SHALL be able to send "NOTICE" messages from relay to client and send human-readable error messages to the client.
 
 ### Performance Requirements
 
-TBD
+#### Single Websocket Connection
+
+The system SHOULD NOT open more than one websocket connection between client and relay.
 
 ### Design Constraints
 
-TBD
+#### NIPs
+
+| Support       | NIP                                                                                                                                    |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Not Supported | [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)                                    |
+| Not Supported | [NIP-02: Contact List and Petnames](https://github.com/nostr-protocol/nips/blob/master/02.md)                                          |
+| Not Supported | [NIP-03: OpenTimestamps Attestations for Events](https://github.com/nostr-protocol/nips/blob/master/03.md)                             |
+| Not Supported | [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)                                           |
+| Not Supported | [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md)               |
+| Not Supported | [NIP-06: Basic key derivation from mnemonic seed phrase](https://github.com/nostr-protocol/nips/blob/master/06.md)                     |
+| Not Supported | [NIP-07: window.nostr capability for web browsers](https://github.com/nostr-protocol/nips/blob/master/07.md)                           |
+| Not Supported | [NIP-08: Handling Mentions --- unrecommended: deprecated in favor of NIP-27](https://github.com/nostr-protocol/nips/blob/master/08.md) |
+| Not Supported | [NIP-09: Event Deletion](https://github.com/nostr-protocol/nips/blob/master/09.md)                                                     |
+| Not Supported | [NIP-10: Conventions for clients' use of e and p tags in text events](https://github.com/nostr-protocol/nips/blob/master/10.md)        |
+| Not Supported | [NIP-11: Relay Information Document](https://github.com/nostr-protocol/nips/blob/master/11.md)                                         |
+| Not Supported | [NIP-12: Generic Tag Queries](https://github.com/nostr-protocol/nips/blob/master/12.md)                                                |
+| Not Supported | [NIP-13: Proof of Work](https://github.com/nostr-protocol/nips/blob/master/13.md)                                                      |
+| Not Supported | [NIP-14: Subject tag in text events](https://github.com/nostr-protocol/nips/blob/master/01.14).                                        |
+| Not Supported | [NIP-16: Event Treatment](https://github.com/nostr-protocol/nips/blob/master/16.md)                                                    |
+| Not Supported | [NIP-18: Reposts](https://github.com/nostr-protocol/nips/blob/master/18.md)                                                            |
+| Not Supported | [NIP-19: bech32-encoded entities](https://github.com/nostr-protocol/nips/blob/master/19.md)                                            |
+| Not Supported | [NIP-20: Command Results](https://github.com/nostr-protocol/nips/blob/master/20.md)                                                    |
+| Not Supported | [NIP-21: nostr: URL scheme](https://github.com/nostr-protocol/nips/blob/master/21.md)                                                  |
+| Not Supported | [NIP-22: Event created_at Limits](https://github.com/nostr-protocol/nips/blob/master/22.md)                                            |
+| Not Supported | [NIP-23: Long-form Content](https://github.com/nostr-protocol/nips/blob/master/23.md)                                                  |
+| Not Supported | [NIP-25: Reactions](https://github.com/nostr-protocol/nips/blob/master/25.md)                                                          |
+| Not Supported | [NIP-26: Delegated Event Signing](https://github.com/nostr-protocol/nips/blob/master/26.md)                                            |
+| Not Supported | [NIP-27: Text Note References](https://github.com/nostr-protocol/nips/blob/master/27.md)                                               |
+| Not Supported | [NIP-28: Public Chat](https://github.com/nostr-protocol/nips/blob/master/28.md)                                                        |
+| Not Supported | [NIP-33: Parameterized Replaceable Events](https://github.com/nostr-protocol/nips/blob/master/33.md)                                   |
+| Not Supported | [NIP-36: Sensitive Content](https://github.com/nostr-protocol/nips/blob/master/36.md)                                                  |
+| Not Supported | [NIP-39: External Identities in Profiles](https://github.com/nostr-protocol/nips/blob/master/39.md)                                    |
+| Not Supported | [NIP-40: Expiration Timestamp](https://github.com/nostr-protocol/nips/blob/master/40.md)                                               |
+| Not Supported | [NIP-42: Authentication of clients to relays](https://github.com/nostr-protocol/nips/blob/master/42.md)                                |
+| Not Supported | [NIP-45: Counting results](https://github.com/nostr-protocol/nips/blob/master/45.md)                                                   |
+| Not Supported | [NIP-46: Nostr Connect](https://github.com/nostr-protocol/nips/blob/master/46.md)                                                      |
+| Not Supported | [NIP-50: Keywords filter](https://github.com/nostr-protocol/nips/blob/master/50.md)                                                    |
+| Not Supported | [NIP-51: Lists](https://github.com/nostr-protocol/nips/blob/master/51.md)                                                              |
+| Not Supported | [NIP-56: Reporting](https://github.com/nostr-protocol/nips/blob/master/56.md)                                                          |
+| Not Supported | [NIP-57: Lightning Zaps](https://github.com/nostr-protocol/nips/blob/master/57.md)                                                     |
+| Not Supported | [NIP-58: Badges](https://github.com/nostr-protocol/nips/blob/master/58.md)                                                             |
+| Not Supported | [NIP-65: Relay List Metadata](https://github.com/nostr-protocol/nips/blob/master/65.md)                                                |
+| Not Supported | [NIP-78: Application-specific data](https://github.com/nostr-protocol/nips/blob/master/78.md)                                          |****
 
 ### Software System Attributes
 
-#### Messages
-
-##### Sign Messages
-
-```mermaid
-graph TD
-    A[Start] --> B[Decode private key hex string]
-    B -->|Error| C[Return error]
-    B -->|Success| D[Generate private and public keys from decoded string]
-    D --> E[Set encoded public key in Event]
-    E --> F[Set current Unix time as Event's creation time]
-    F --> G[Handle Event tags initialization]
-    G --> H[Compute SHA-256 hash of serialized Event]
-    H --> I[Sign the hash using Schnorr signature]
-    I -->|Error| J[Return error]
-    I -->|Success| K[Set hex-encoded signature in Event]
-    K --> L[Set hex-encoded hash as Event ID]
-    L --> M[Return nil]
-```
+TBD
 
 ### Other Requirements
 

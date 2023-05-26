@@ -22,7 +22,7 @@ func New(opt *Options) *EventCommand {
 	cmd.fs.IntVar(&cmd.Kind, "k", 0, "Event Kind ...")
 	cmd.fs.StringVar(&cmd.Content, "c", "", "Content ...")
 	cmd.fs.StringVar(&cmd.Relay, "u", "undefined", "Subscription ID used for ...")
-	cmd.fs.StringVar(&cmd.NSEC, "nsec", "undefined", "Bech32 encoded private key ...")
+	cmd.fs.StringVar(&cmd.Nsec, "nsec", "undefined", "Bech32 encoded private key ...")
 	return cmd
 }
 
@@ -30,7 +30,7 @@ type Options struct {
 	Client  *client.Client
 	Content string
 	Kind    int
-	NSEC    string
+	Nsec    string
 	Relay   string
 }
 
@@ -58,22 +58,22 @@ func (c *EventCommand) Run() error {
 	c.Client.HandleMessageFunc(func(msg message.Message) {
 		msgChan <- msg
 	})
-	c.Client.Subscribe(ctx, c.Relay)
-	_, nsecBech, err := bech32.DecodeNoLimit(c.NSEC)
+	c.Client.Connect(ctx, c.Relay)
+	_, nsecData, err := bech32.DecodeNoLimit(c.Nsec)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	prvKey, err := bech32.ConvertBits(nsecBech, 5, 8, false)
+	prvKey, err := bech32.ConvertBits(nsecData, 5, 8, false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	prvKeyHex := hex.EncodeToString(prvKey[0:32])
-	evnt := shorttextnote.New(c.Content)
-	evnt.Sign(prvKeyHex)
-	outMsg := eventmessage.New("", evnt)
-	c.Client.Publish(ctx, outMsg)
+	evt := shorttextnote.New(c.Content)
+	evt.Sign(prvKeyHex)
+	outMsg := eventmessage.New("", evt)
+	c.Client.SendMessage(ctx, outMsg)
 	inMsg := <-msgChan
 	inMsgByt, err := inMsg.Marshal()
 	if err != nil {

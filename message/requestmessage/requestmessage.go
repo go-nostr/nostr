@@ -7,10 +7,10 @@ import (
 const Type = "REQ"
 
 // New creates a new RequestMessage with the provided subscription ID and filters.
-func New(subscriptionID string, filters ...*Filter) message.Message {
-	mess := message.New(Type, subscriptionID)
-	for _, f := range filters {
-		mess.Push(f)
+func New(sid string, filter ...*Filter) message.Message {
+	msg := message.New(Type, sid)
+	for _, f := range filter {
+		msg.Push(f)
 	}
-	return mess
+	return msg
 }
