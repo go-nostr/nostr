@@ -334,7 +334,7 @@ The system SHOULD NOT open more than one websocket connection between client and
 | Support       | NIP                                                                                                                                    |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | Supported | [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)                                    |
-| Not Supported | [NIP-02: Contact List and Petnames](https://github.com/nostr-protocol/nips/blob/master/02.md)                                          |
+| Supported | [NIP-02: Contact List and Petnames](https://github.com/nostr-protocol/nips/blob/master/02.md)                                          |
 | Not Supported | [NIP-03: OpenTimestamps Attestations for Events](https://github.com/nostr-protocol/nips/blob/master/03.md)                             |
 | Not Supported | [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)                                           |
 | Not Supported | [NIP-05: Mapping Nostr keys to DNS-based internet identifiers](https://github.com/nostr-protocol/nips/blob/master/05.md)               |
