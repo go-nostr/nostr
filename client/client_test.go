@@ -12,6 +12,7 @@ import (
 	"github.com/go-nostr/nostr/message/closemessage"
 	"github.com/go-nostr/nostr/message/requestmessage"
 	"github.com/go-nostr/nostr/relay"
+	"github.com/go-nostr/nostr/subscriptionid"
 )
 
 func Test_New(t *testing.T) {
@@ -114,13 +115,9 @@ func TestClient_SendMessage(t *testing.T) {
 	type args struct {
 		msg message.Message
 	}
-	type fields struct {
-		u string
-	}
 	tests := []struct {
-		name   string
-		args   args
-		fields fields
+		name string
+		args args
 	}{
 		{
 			name: "SHOULD send close message from client to relay",
@@ -132,13 +129,13 @@ func TestClient_SendMessage(t *testing.T) {
 		// {
 		// 	name: "SHOULD send event message from client to relay",
 		// 	args: args{
-		// 		msg: eventmessage.New("subscription-id", metadataevent.New("name", "", "")),
+		// 		msg: eventmessage.New(subscriptionid.New(), metadataevent.New("name", "", "")),
 		// 	},
 		// },
 		{
 			name: "SHOULD send request message from client to relay",
 			args: args{
-				msg: requestmessage.New("subscription-id"),
+				msg: requestmessage.New(subscriptionid.New()),
 			},
 		},
 	}
@@ -205,7 +202,7 @@ func TestClient_Connect(t *testing.T) {
 		{
 			name: "SHOULD subscribe to relay",
 			args: args{
-				msg: requestmessage.New("subscription-id", nil),
+				msg: requestmessage.New(subscriptionid.New()),
 			},
 			fields: fields{
 				u: ts.URL,
