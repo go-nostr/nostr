@@ -33,8 +33,8 @@ type Event struct {
 }
 
 // Marshal marshals the Event to a byte slice.
-func (e Event) Marshal() ([]byte, error) {
-	return json.Marshal(e)
+func (e *Event) Marshal() ([]byte, error) {
+	return json.Marshal(*e)
 }
 
 // Serialize TBD
@@ -69,12 +69,12 @@ func (e *Event) Sign(prvKeyHex string) error {
 }
 
 // Unmarshal unmarshals the Event from a byte slice.
-func (e Event) Unmarshal(data []byte) error {
-	return json.Unmarshal(data, &e)
+func (e *Event) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, e)
 }
 
 // Verify verifies the event pubkey and signature.
-func (e Event) Verify() error {
+func (e *Event) Verify() error {
 	pubKeyStr, err := hex.DecodeString(e.PubKey)
 	if err != nil {
 		return nil
